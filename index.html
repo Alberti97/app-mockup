@@ -3,26 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Veesion Store · iPhone 15 Pro Preview</title>
+<title>Veesion Store · Device Preview (V1.1)</title>
 <style>
-  /* ---------- Page ---------- */
+  /* ============================================================
+     V1.1 — Multi-device mockup (iOS + Samsung) with demo cursor
+     ============================================================ */
   :root {
-    /* Phone dimensions (logical) */
-    --phone-w: 390px;
-    --phone-h: 844px;
-
-    /* Status bar + home indicator safe-area heights */
+    --phone-w: 430px;
+    --phone-h: 932px;
+    --phone-radius: 56px;
+    --phone-bezel: 12px;
+    --screen-radius: 44px;
+ 
     --safe-top: 54px;
     --safe-bottom: 34px;
-
-    /* Band color = matches the embedded app background.
-       Veesion Store is a light/white app, so bands are white
-       and the iOS UI elements are dark. */
+ 
     --band-bg: #ffffff;
     --ios-fg: #1a1a1f;
-
+ 
+    --frame: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%);
     --shadow: 0 30px 80px rgba(0,0,0,0.55), 0 10px 25px rgba(0,0,0,0.35);
   }
+ 
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
@@ -37,30 +39,42 @@
     min-height: 100%;
     overflow: hidden;
   }
-
-  header {
-    text-align: center;
-    margin-bottom: 10px;
-    transition: opacity .25s ease, height .25s ease, margin .25s ease;
+ 
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    z-index: 20;
+    transition: opacity .25s ease;
   }
-  header h1 {
-    margin: 0 0 2px;
-    font-weight: 600;
-    font-size: 14px;
-    letter-spacing: -0.01em;
-    color: #d0d0d6;
-  }
-  header p {
-    margin: 0;
-    color: #6a6a72;
+  .toolbar select,
+  .toolbar button {
+    background: rgba(255,255,255,0.07);
+    color: #f5f5f7;
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 7px 12px;
+    border-radius: 999px;
     font-size: 11px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    font-family: inherit;
+    transition: background .2s ease;
   }
-
-  body.presenting header { opacity: 0; height: 0; margin: 0; pointer-events: none; overflow: hidden; }
+  .toolbar select { padding: 6px 10px; }
+  .toolbar select option { background: #1a1a1f; color: #f5f5f7; }
+  .toolbar select optgroup { color: #888; font-style: normal; }
+  .toolbar button:hover,
+  .toolbar select:hover { background: rgba(255,255,255,0.16); }
+  .toolbar button.active { background: #4a8cff; border-color: #4a8cff; color: #fff; }
+ 
   body.presenting .toolbar { opacity: 0.12; }
   body.presenting .toolbar:hover { opacity: 1; }
-
-  /* ---------- Stage scales the phone to fit viewport ---------- */
+ 
+  /* ---------- Stage scales the device to fit viewport ---------- */
   .stage {
     width: var(--phone-w);
     height: var(--phone-h);
@@ -68,32 +82,37 @@
     transform-origin: center center;
     flex-shrink: 0;
   }
-
-  /* ---------- iPhone 15 Pro ---------- */
-  .phone {
+ 
+  /* ---------- Device frame ---------- */
+  .device {
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 58px;
-    background: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%);
+    border-radius: var(--phone-radius);
+    background: var(--frame);
     box-shadow: var(--shadow),
-                inset 0 0 0 2px #3a3a3d,
-                inset 0 0 0 6px #18181b;
-    padding: 12px;
+                inset 0 0 0 2px rgba(255,255,255,0.08),
+                inset 0 0 0 6px rgba(0,0,0,0.4);
+    padding: var(--phone-bezel);
   }
-
-  /* Titanium edge highlight */
-  .phone::before {
+  .device::before {
     content: "";
     position: absolute;
     inset: 2px;
-    border-radius: 56px;
+    border-radius: calc(var(--phone-radius) - 2px);
     pointer-events: none;
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 25%),
-      linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 25%);
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 22%),
+      linear-gradient(0deg,   rgba(255,255,255,0.04), rgba(255,255,255,0) 22%);
   }
-
+ 
+  /* Frame variants */
+  [data-frame="titanium"]    { --frame: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%); }
+  [data-frame="graphite"]    { --frame: linear-gradient(160deg, #303034 0%, #1d1d20 40%, #0f0f12 100%); }
+  [data-frame="phantomblack"]{ --frame: linear-gradient(160deg, #18181a 0%, #0d0d0f 50%, #050506 100%); }
+  [data-frame="silver"]      { --frame: linear-gradient(160deg, #cdcdd0 0%, #9d9d9f 45%, #7a7a7c 100%); }
+  [data-frame="spaceblack"]  { --frame: linear-gradient(160deg, #25262a 0%, #15161a 45%, #0a0b0e 100%); }
+ 
   /* Side buttons */
   .btn {
     position: absolute;
@@ -103,22 +122,30 @@
   .btn.left  { left: -3px; }
   .btn.right { right: -3px; }
   .btn.silent  { top: 95px;  width: 4px; height: 28px; }
-  .btn.vol-up  { top: 145px; width: 4px; height: 60px; }
-  .btn.vol-dn  { top: 220px; width: 4px; height: 60px; }
-  .btn.power   { top: 175px; width: 4px; height: 95px; }
-
+  .btn.left.vol-up  { top: 145px; width: 4px; height: 60px; }
+  .btn.left.vol-dn  { top: 220px; width: 4px; height: 60px; }
+  .btn.right.power  { top: 175px; width: 4px; height: 95px; }
+ 
+  /* Hide right-side aux buttons unless device is Android */
+  .btn.right.vol-up, .btn.right.vol-dn { display: none; }
+ 
+  [data-os="android"] .btn.silent      { display: none; }
+  [data-os="android"] .btn.left        { display: none; }
+  [data-os="android"] .btn.right.vol-up{ display: block; top: 130px; width: 4px; height: 50px; }
+  [data-os="android"] .btn.right.vol-dn{ display: block; top: 185px; width: 4px; height: 50px; }
+  [data-os="android"] .btn.right.power { display: block; top: 250px; width: 4px; height: 70px; }
+ 
+  [data-form="tablet"] .btn { display: none; }
+ 
   /* Screen */
   .screen {
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 47px;
+    border-radius: var(--screen-radius);
     background: var(--band-bg);
     overflow: hidden;
   }
-
-  /* Iframe holding the webapp — inset by safe areas so content
-     never sits under the status bar or home indicator. */
   .webapp-frame {
     position: absolute;
     top: var(--safe-top);
@@ -130,8 +157,6 @@
     border: 0;
     background: var(--band-bg);
   }
-
-  /* Bands behind iOS UI — match app background (white) so the seam disappears */
   .band {
     position: absolute;
     left: 0; right: 0;
@@ -140,21 +165,47 @@
   }
   .band.top    { top: 0;    height: var(--safe-top); }
   .band.bottom { bottom: 0; height: var(--safe-bottom); }
-
-  /* Dynamic Island stays black like real hardware */
-  .dynamic-island {
-    position: absolute;
-    top: 11px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 124px;
-    height: 37px;
-    background: #050505;
-    border-radius: 20px;
-    z-index: 5;
+ 
+  /* Notches / cutouts */
+  .notch { display: none; position: absolute; z-index: 5; }
+ 
+  .notch-island {
+    top: 11px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 37px;
+    background: #050505; border-radius: 20px;
   }
-
-  /* Status bar — dark glyphs on white band */
+  [data-notch="island"]       .notch-island { display: block; }
+  [data-notch="island-small"] .notch-island { display: block; width: 105px; height: 33px; }
+ 
+  .notch-classic {
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 210px; height: 30px;
+    background: #050505; border-radius: 0 0 18px 18px;
+  }
+  [data-notch="classic"] .notch-classic { display: block; }
+ 
+  .notch-punch {
+    top: 12px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 10px;
+    background: #050505; border-radius: 50%;
+  }
+  [data-notch="punch"] .notch-punch { display: block; }
+ 
+  .notch-ipad {
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 64px; height: 18px;
+    background: #050505; border-radius: 0 0 12px 12px;
+  }
+  [data-notch="ipad"] .notch-ipad { display: block; }
+ 
+  .notch-tab {
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 18px;
+    background: #050505; border-radius: 0 0 12px 12px;
+  }
+  [data-notch="tab"] .notch-tab { display: block; }
+ 
+  /* Status bar */
   .status-bar {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -170,24 +221,18 @@
     pointer-events: none;
     font-feature-settings: "tnum";
   }
-  .status-bar .time { letter-spacing: 0.2px; }
-  .status-bar .icons {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+  [data-os="android"] .status-bar { font-weight: 500; padding: 18px 26px 0; }
+  .status-bar .icons { display: flex; align-items: center; gap: 6px; }
   .signal {
-    display: inline-block;
-    width: 17px; height: 11px;
+    display: inline-block; width: 17px; height: 11px;
     background:
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) left  bottom / 3px 30%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 4px   bottom / 3px 50%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 8px   bottom / 3px 75%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 12px  bottom / 3px 100% no-repeat;
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) left bottom / 3px 30%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 4px  bottom / 3px 50%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 8px  bottom / 3px 75%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 12px bottom / 3px 100% no-repeat;
   }
   .wifi {
-    display: inline-block;
-    width: 16px; height: 11px;
+    display: inline-block; width: 16px; height: 11px;
     background: var(--ios-fg);
     -webkit-mask:
       radial-gradient(circle at 50% 100%, #000 1.5px, transparent 2px) no-repeat,
@@ -199,30 +244,20 @@
       radial-gradient(circle at 50% 100%, transparent 7.5px, #000 8px, #000 9.5px, transparent 10px) no-repeat;
   }
   .battery {
-    position: relative;
-    display: inline-block;
+    position: relative; display: inline-block;
     width: 26px; height: 12px;
     border: 1px solid color-mix(in srgb, var(--ios-fg) 55%, transparent);
-    border-radius: 3px;
-    padding: 1px;
+    border-radius: 3px; padding: 1px;
   }
   .battery::after {
-    content: "";
-    position: absolute;
-    right: -3px; top: 3px;
+    content: ""; position: absolute; right: -3px; top: 3px;
     width: 2px; height: 6px;
     background: color-mix(in srgb, var(--ios-fg) 55%, transparent);
     border-radius: 1px;
   }
-  .battery .level {
-    display: block;
-    width: 80%;
-    height: 100%;
-    background: var(--ios-fg);
-    border-radius: 1px;
-  }
-
-  /* Home indicator — dark bar on white band */
+  .battery .level { display: block; width: 80%; height: 100%; background: var(--ios-fg); border-radius: 1px; }
+ 
+  /* Home indicator */
   .home-indicator {
     position: absolute;
     bottom: 8px;
@@ -234,31 +269,9 @@
     border-radius: 3px;
     z-index: 6;
   }
-
-  /* ---------- Toolbar ---------- */
-  .toolbar {
-    position: fixed;
-    top: 14px;
-    right: 16px;
-    display: flex;
-    gap: 6px;
-    z-index: 10;
-    transition: opacity .25s ease;
-  }
-  .toolbar button {
-    background: rgba(255,255,255,0.07);
-    color: #f5f5f7;
-    border: 1px solid rgba(255,255,255,0.12);
-    padding: 7px 12px;
-    border-radius: 999px;
-    font-size: 11px;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    transition: background .2s ease;
-    font-family: inherit;
-  }
-  .toolbar button:hover { background: rgba(255,255,255,0.16); }
-
+  [data-os="android"] .home-indicator { width: 110px; height: 4px; bottom: 10px; }
+  [data-form="tablet"] .home-indicator { width: 180px; }
+ 
   .hint {
     position: fixed;
     bottom: 10px;
@@ -274,30 +287,46 @@
 </style>
 </head>
 <body class="presenting">
-
+ 
   <div class="toolbar">
+    <select id="deviceSelect" title="Pick a device">
+      <optgroup label="iOS">
+        <option value="iphone-12-pmax">iPhone 12 Pro Max</option>
+        <option value="iphone-15-pmax" selected>iPhone 15 Pro Max</option>
+        <option value="iphone-17-pmax">iPhone 17 Pro Max</option>
+        <option value="ipad-pro-m4">iPad Pro M4 13"</option>
+      </optgroup>
+      <optgroup label="Android (Samsung)">
+        <option value="galaxy-s21-ultra">Galaxy S21 Ultra</option>
+        <option value="galaxy-s24-ultra">Galaxy S24 Ultra</option>
+        <option value="galaxy-s25-ultra">Galaxy S25 Ultra</option>
+        <option value="galaxy-tab-s10-ultra">Galaxy Tab S10 Ultra</option>
+      </optgroup>
+    </select>
     <button id="reloadBtn" title="Reload (R)">↻</button>
-    <button id="presentBtn" title="Toggle title bar (P)">▣</button>
+    <button id="presentBtn" title="Toggle title (P)">▣</button>
     <button id="fsBtn" title="Fullscreen (F)">⛶</button>
   </div>
-
-  <header>
-    <h1>Veesion Store · iPhone Preview</h1>
-    <p>store.veesion.io/stores</p>
-  </header>
-
+ 
   <div class="stage" id="stage">
-    <div class="phone" role="img" aria-label="iPhone 15 Pro mockup">
+    <div class="device" id="device">
       <span class="btn left silent"></span>
       <span class="btn left vol-up"></span>
       <span class="btn left vol-dn"></span>
       <span class="btn right power"></span>
-
+      <span class="btn right vol-up"></span>
+      <span class="btn right vol-dn"></span>
+ 
       <div class="screen">
         <div class="band top"></div>
         <div class="band bottom"></div>
-
-        <div class="dynamic-island"></div>
+ 
+        <div class="notch notch-island"></div>
+        <div class="notch notch-classic"></div>
+        <div class="notch notch-punch"></div>
+        <div class="notch notch-ipad"></div>
+        <div class="notch notch-tab"></div>
+ 
         <div class="status-bar">
           <span class="time" id="clock">9:41</span>
           <span class="icons">
@@ -306,7 +335,7 @@
             <span class="battery"><span class="level"></span></span>
           </span>
         </div>
-
+ 
         <iframe
           id="app"
           class="webapp-frame"
@@ -315,16 +344,121 @@
           allow="clipboard-read; clipboard-write; geolocation; camera; microphone"
           referrerpolicy="no-referrer-when-downgrade">
         </iframe>
-
+ 
         <div class="home-indicator"></div>
       </div>
     </div>
   </div>
-
-  <div class="hint">P · title  &nbsp; F · fullscreen  &nbsp; R · reload</div>
-
+ 
+  <div class="hint">
+    P · title &nbsp; F · fullscreen &nbsp; R · reload
+  </div>
+ 
 <script>
-  // -------- Live clock in status bar --------
+  // ============================================================
+  // Device catalog
+  // ============================================================
+  const DEVICES = {
+    'iphone-12-pmax': {
+      label: 'iPhone 12 Pro Max', os: 'ios', form: 'phone',
+      width: 428, height: 926,
+      radius: 50, bezel: 11, screenRadius: 39,
+      notch: 'classic', frame: 'graphite',
+      safeTop: 50, safeBottom: 30,
+    },
+    'iphone-15-pmax': {
+      label: 'iPhone 15 Pro Max', os: 'ios', form: 'phone',
+      width: 430, height: 932,
+      radius: 56, bezel: 12, screenRadius: 44,
+      notch: 'island', frame: 'titanium',
+      safeTop: 54, safeBottom: 34,
+    },
+    'iphone-17-pmax': {
+      label: 'iPhone 17 Pro Max', os: 'ios', form: 'phone',
+      width: 444, height: 956,
+      radius: 58, bezel: 10, screenRadius: 48,
+      notch: 'island-small', frame: 'titanium',
+      safeTop: 54, safeBottom: 34,
+    },
+    'ipad-pro-m4': {
+      label: 'iPad Pro M4 13"', os: 'ios', form: 'tablet',
+      width: 1032, height: 1376,
+      radius: 38, bezel: 18, screenRadius: 22,
+      notch: 'ipad', frame: 'spaceblack',
+      safeTop: 38, safeBottom: 26,
+    },
+    'galaxy-s21-ultra': {
+      label: 'Galaxy S21 Ultra', os: 'android', form: 'phone',
+      width: 412, height: 915,
+      radius: 44, bezel: 10, screenRadius: 36,
+      notch: 'punch', frame: 'phantomblack',
+      safeTop: 50, safeBottom: 28,
+    },
+    'galaxy-s24-ultra': {
+      label: 'Galaxy S24 Ultra', os: 'android', form: 'phone',
+      width: 412, height: 915,
+      radius: 32, bezel: 8, screenRadius: 26,
+      notch: 'punch', frame: 'titanium',
+      safeTop: 50, safeBottom: 28,
+    },
+    'galaxy-s25-ultra': {
+      label: 'Galaxy S25 Ultra', os: 'android', form: 'phone',
+      width: 416, height: 920,
+      radius: 36, bezel: 8, screenRadius: 30,
+      notch: 'punch', frame: 'titanium',
+      safeTop: 50, safeBottom: 28,
+    },
+    'galaxy-tab-s10-ultra': {
+      label: 'Galaxy Tab S10 Ultra', os: 'android', form: 'tablet',
+      width: 1056, height: 1640,
+      radius: 22, bezel: 14, screenRadius: 12,
+      notch: 'tab', frame: 'graphite',
+      safeTop: 38, safeBottom: 26,
+    },
+  };
+ 
+  const stage  = document.getElementById('stage');
+  const device = document.getElementById('device');
+ 
+  function applyDevice(key) {
+    const d = DEVICES[key];
+    if (!d) return;
+    const root = document.documentElement;
+    root.style.setProperty('--phone-w',      d.width  + 'px');
+    root.style.setProperty('--phone-h',      d.height + 'px');
+    root.style.setProperty('--phone-radius', d.radius + 'px');
+    root.style.setProperty('--phone-bezel',  d.bezel  + 'px');
+    root.style.setProperty('--screen-radius',d.screenRadius + 'px');
+    root.style.setProperty('--safe-top',     d.safeTop    + 'px');
+    root.style.setProperty('--safe-bottom',  d.safeBottom + 'px');
+ 
+    stage.dataset.device = key;
+    device.dataset.os    = d.os;
+    device.dataset.form  = d.form;
+    device.dataset.notch = d.notch;
+    device.dataset.frame = d.frame;
+    fit();
+  }
+ 
+  // ============================================================
+  // Auto-scale to viewport
+  // ============================================================
+  function fit() {
+    const presenting  = document.body.classList.contains('presenting');
+    const verticalPad = presenting ? 24 : 90;
+    const horizPad    = 24;
+    const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--phone-w')) || 430;
+    const h = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--phone-h')) || 932;
+    const availH = window.innerHeight - verticalPad;
+    const availW = window.innerWidth  - horizPad;
+    const scale  = Math.min(availH / h, availW / w, 4);
+    document.documentElement.style.setProperty('--scale', scale.toFixed(3));
+  }
+  window.addEventListener('resize', fit);
+ 
+  // ============================================================
+  // Live clock
+  // ============================================================
   function updateClock() {
     const now = new Date();
     const h = now.getHours();
@@ -333,55 +467,38 @@
   }
   updateClock();
   setInterval(updateClock, 30 * 1000);
-
-  // -------- Aggressive auto-scale: phone fills the viewport --------
-  // We want the phone to dominate the screen — including when a Google Meet
-  // attendee is watching from a phone (tall narrow viewport).
-  const PHONE_W = 390;
-  const PHONE_H = 844;
-  function fit() {
-    const presenting  = document.body.classList.contains('presenting');
-    const verticalPad = presenting ? 24 : 90;   // tiny padding when presenting
-    const horizPad    = 24;
-    const availH = window.innerHeight - verticalPad;
-    const availW = window.innerWidth  - horizPad;
-    // Cap is high (4x) so the phone genuinely fills tall vertical screens.
-    const scale  = Math.min(availH / PHONE_H, availW / PHONE_W, 4);
-    document.documentElement.style.setProperty('--scale', scale.toFixed(3));
-  }
-  fit();
-  window.addEventListener('resize', fit);
-
-  // -------- Buttons --------
-  const app        = document.getElementById('app');
-  const reloadBtn  = document.getElementById('reloadBtn');
-  const presentBtn = document.getElementById('presentBtn');
-  const fsBtn      = document.getElementById('fsBtn');
-
-  reloadBtn.addEventListener('click', () => { app.src = app.src; });
-
-  function togglePresent() {
-    document.body.classList.toggle('presenting');
-    fit();
-  }
-  presentBtn.addEventListener('click', togglePresent);
-
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
-    }
-  }
-  fsBtn.addEventListener('click', toggleFullscreen);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.key === 'p' || e.key === 'P') togglePresent();
-    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-    if (e.key === 'r' || e.key === 'R') app.src = app.src;
+ 
+  // ============================================================
+  // Toolbar buttons + shortcuts
+  // ============================================================
+  const app         = document.getElementById('app');
+  const reloadBtn   = document.getElementById('reloadBtn');
+  const presentBtn  = document.getElementById('presentBtn');
+  const fsBtn       = document.getElementById('fsBtn');
+  const deviceSel   = document.getElementById('deviceSelect');
+ 
+  reloadBtn.addEventListener('click',  () => { app.src = app.src; });
+  presentBtn.addEventListener('click', () => { document.body.classList.toggle('presenting'); fit(); });
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
   });
+  deviceSel.addEventListener('change', e => applyDevice(e.target.value));
+ 
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'p') { document.body.classList.toggle('presenting'); fit(); }
+    if (k === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+    if (k === 'r') app.src = app.src;
+  });
+ 
+  // Init
+  applyDevice('iphone-15-pmax');
 </script>
-
+ 
 </body>
 </html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Veesion Store · iPhone 15 Pro Preview</title>
+<style>
+  /* ---------- Page ---------- */
+  :root {
+    /* Phone dimensions (logical) */
+    --phone-w: 390px;
+    --phone-h: 844px;
+
+    /* Status bar + home indicator safe-area heights */
+    --safe-top: 54px;
+    --safe-bottom: 34px;
+
+    /* Band color = matches the embedded app background.
+       Veesion Store is a light/white app, so bands are white
+       and the iOS UI elements are dark. */
+    --band-bg: #ffffff;
+    --ios-fg: #1a1a1f;
+
+    --shadow: 0 30px 80px rgba(0,0,0,0.55), 0 10px 25px rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0a0a0c;
+    color: #f5f5f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 10px;
+    transition: opacity .25s ease, height .25s ease, margin .25s ease;
+  }
+  header h1 {
+    margin: 0 0 2px;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    color: #d0d0d6;
+  }
+  header p {
+    margin: 0;
+    color: #6a6a72;
+    font-size: 11px;
+  }
+
+  body.presenting header { opacity: 0; height: 0; margin: 0; pointer-events: none; overflow: hidden; }
+  body.presenting .toolbar { opacity: 0.12; }
+  body.presenting .toolbar:hover { opacity: 1; }
+
+  /* ---------- Stage scales the phone to fit viewport ---------- */
+  .stage {
+    width: var(--phone-w);
+    height: var(--phone-h);
+    transform: scale(var(--scale, 1));
+    transform-origin: center center;
+    flex-shrink: 0;
+  }
+
+  /* ---------- iPhone 15 Pro ---------- */
+  .phone {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 58px;
+    background: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%);
+    box-shadow: var(--shadow),
+                inset 0 0 0 2px #3a3a3d,
+                inset 0 0 0 6px #18181b;
+    padding: 12px;
+  }
+
+  /* Titanium edge highlight */
+  .phone::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 56px;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 25%),
+      linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 25%);
+  }
+
+  /* Side buttons */
+  .btn {
+    position: absolute;
+    background: linear-gradient(90deg, #1a1a1d, #3a3a3d, #1a1a1d);
+    border-radius: 2px;
+  }
+  .btn.left  { left: -3px; }
+  .btn.right { right: -3px; }
+  .btn.silent  { top: 95px;  width: 4px; height: 28px; }
+  .btn.vol-up  { top: 145px; width: 4px; height: 60px; }
+  .btn.vol-dn  { top: 220px; width: 4px; height: 60px; }
+  .btn.power   { top: 175px; width: 4px; height: 95px; }
+
+  /* Screen */
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 47px;
+    background: var(--band-bg);
+    overflow: hidden;
+  }
+
+  /* Iframe holding the webapp — inset by safe areas so content
+     never sits under the status bar or home indicator. */
+  .webapp-frame {
+    position: absolute;
+    top: var(--safe-top);
+    left: 0;
+    right: 0;
+    bottom: var(--safe-bottom);
+    width: 100%;
+    height: calc(100% - var(--safe-top) - var(--safe-bottom));
+    border: 0;
+    background: var(--band-bg);
+  }
+
+  /* Bands behind iOS UI — match app background (white) so the seam disappears */
+  .band {
+    position: absolute;
+    left: 0; right: 0;
+    background: var(--band-bg);
+    z-index: 3;
+  }
+  .band.top    { top: 0;    height: var(--safe-top); }
+  .band.bottom { bottom: 0; height: var(--safe-bottom); }
+
+  /* Dynamic Island stays black like real hardware */
+  .dynamic-island {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 124px;
+    height: 37px;
+    background: #050505;
+    border-radius: 20px;
+    z-index: 5;
+  }
+
+  /* Status bar — dark glyphs on white band */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: var(--safe-top);
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px 0;
+    color: var(--ios-fg);
+    font-size: 15px;
+    font-weight: 600;
+    pointer-events: none;
+    font-feature-settings: "tnum";
+  }
+  .status-bar .time { letter-spacing: 0.2px; }
+  .status-bar .icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .signal {
+    display: inline-block;
+    width: 17px; height: 11px;
+    background:
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) left  bottom / 3px 30%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 4px   bottom / 3px 50%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 8px   bottom / 3px 75%  no-repeat,
+      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 12px  bottom / 3px 100% no-repeat;
+  }
+  .wifi {
+    display: inline-block;
+    width: 16px; height: 11px;
+    background: var(--ios-fg);
+    -webkit-mask:
+      radial-gradient(circle at 50% 100%, #000 1.5px, transparent 2px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 4px, #000 4.5px, #000 6px, transparent 6.5px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 7.5px, #000 8px, #000 9.5px, transparent 10px) no-repeat;
+            mask:
+      radial-gradient(circle at 50% 100%, #000 1.5px, transparent 2px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 4px, #000 4.5px, #000 6px, transparent 6.5px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 7.5px, #000 8px, #000 9.5px, transparent 10px) no-repeat;
+  }
+  .battery {
+    position: relative;
+    display: inline-block;
+    width: 26px; height: 12px;
+    border: 1px solid color-mix(in srgb, var(--ios-fg) 55%, transparent);
+    border-radius: 3px;
+    padding: 1px;
+  }
+  .battery::after {
+    content: "";
+    position: absolute;
+    right: -3px; top: 3px;
+    width: 2px; height: 6px;
+    background: color-mix(in srgb, var(--ios-fg) 55%, transparent);
+    border-radius: 1px;
+  }
+  .battery .level {
+    display: block;
+    width: 80%;
+    height: 100%;
+    background: var(--ios-fg);
+    border-radius: 1px;
+  }
+
+  /* Home indicator — dark bar on white band */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    background: color-mix(in srgb, var(--ios-fg) 85%, transparent);
+    border-radius: 3px;
+    z-index: 6;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+    transition: opacity .25s ease;
+  }
+  .toolbar button {
+    background: rgba(255,255,255,0.07);
+    color: #f5f5f7;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: background .2s ease;
+    font-family: inherit;
+  }
+  .toolbar button:hover { background: rgba(255,255,255,0.16); }
+
+  .hint {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #555560;
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity .25s ease;
+    pointer-events: none;
+  }
+  body.presenting .hint { opacity: 0.6; }
+</style>
+</head>
+<body class="presenting">
+
+  <div class="toolbar">
+    <button id="reloadBtn" title="Reload (R)">↻</button>
+    <button id="presentBtn" title="Toggle title bar (P)">▣</button>
+    <button id="fsBtn" title="Fullscreen (F)">⛶</button>
+  </div>
+
+  <header>
+    <h1>Veesion Store · iPhone Preview</h1>
+    <p>store.veesion.io/stores</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="phone" role="img" aria-label="iPhone 15 Pro mockup">
+      <span class="btn left silent"></span>
+      <span class="btn left vol-up"></span>
+      <span class="btn left vol-dn"></span>
+      <span class="btn right power"></span>
+
+      <div class="screen">
+        <div class="band top"></div>
+        <div class="band bottom"></div>
+
+        <div class="dynamic-island"></div>
+        <div class="status-bar">
+          <span class="time" id="clock">9:41</span>
+          <span class="icons">
+            <span class="signal" aria-hidden="true"></span>
+            <span class="wifi" aria-hidden="true"></span>
+            <span class="battery"><span class="level"></span></span>
+          </span>
+        </div>
+
+        <iframe
+          id="app"
+          class="webapp-frame"
+          src="https://store.veesion.io/stores"
+          title="Veesion Store"
+          allow="clipboard-read; clipboard-write; geolocation; camera; microphone"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">P · title  &nbsp; F · fullscreen  &nbsp; R · reload</div>
+
+<script>
+  // -------- Live clock in status bar --------
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes().toString().padStart(2, '0');
+    document.getElementById('clock').textContent = `${h}:${m}`;
+  }
+  updateClock();
+  setInterval(updateClock, 30 * 1000);
+
+  // -------- Aggressive auto-scale: phone fills the viewport --------
+  // We want the phone to dominate the screen — including when a Google Meet
+  // attendee is watching from a phone (tall narrow viewport).
+  const PHONE_W = 390;
+  const PHONE_H = 844;
+  function fit() {
+    const presenting  = document.body.classList.contains('presenting');
+    const verticalPad = presenting ? 24 : 90;   // tiny padding when presenting
+    const horizPad    = 24;
+    const availH = window.innerHeight - verticalPad;
+    const availW = window.innerWidth  - horizPad;
+    // Cap is high (4x) so the phone genuinely fills tall vertical screens.
+    const scale  = Math.min(availH / PHONE_H, availW / PHONE_W, 4);
+    document.documentElement.style.setProperty('--scale', scale.toFixed(3));
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  // -------- Buttons --------
+  const app        = document.getElementById('app');
+  const reloadBtn  = document.getElementById('reloadBtn');
+  const presentBtn = document.getElementById('presentBtn');
+  const fsBtn      = document.getElementById('fsBtn');
+
+  reloadBtn.addEventListener('click', () => { app.src = app.src; });
+
+  function togglePresent() {
+    document.body.classList.toggle('presenting');
+    fit();
+  }
+  presentBtn.addEventListener('click', togglePresent);
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+  fsBtn.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'p' || e.key === 'P') togglePresent();
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'r' || e.key === 'R') app.src = app.src;
+  });
+</script>
+
+</body>
+</html>

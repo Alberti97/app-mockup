@@ -3,502 +3,1147 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Veesion Store · Device Preview (V1.1)</title>
+<title>Veesion Device Preview</title>
+<meta name="description" content="Present the Veesion Store web app inside realistic phone and tablet frames." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='8' y='2' width='16' height='28' rx='4' fill='%23111'/%3E%3Crect x='10' y='4' width='12' height='24' rx='2.5' fill='%235b8cff'/%3E%3C/svg%3E" />
 <style>
-  /* ============================================================
-     V1.1 — Multi-device mockup (iOS + Samsung) with demo cursor
-     ============================================================ */
-  :root {
-    --phone-w: 430px;
-    --phone-h: 932px;
-    --phone-radius: 56px;
-    --phone-bezel: 12px;
-    --screen-radius: 44px;
- 
-    --safe-top: 54px;
-    --safe-bottom: 34px;
- 
-    --band-bg: #ffffff;
-    --ios-fg: #1a1a1f;
- 
-    --frame: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%);
-    --shadow: 0 30px 80px rgba(0,0,0,0.55), 0 10px 25px rgba(0,0,0,0.35);
-  }
- 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #0a0a0c;
-    color: #f5f5f7;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 12px;
-    min-height: 100%;
-    overflow: hidden;
-  }
- 
-  /* ---------- Toolbar ---------- */
-  .toolbar {
-    position: fixed;
-    top: 14px;
-    right: 16px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    z-index: 20;
-    transition: opacity .25s ease;
-  }
-  .toolbar select,
-  .toolbar button {
-    background: rgba(255,255,255,0.07);
-    color: #f5f5f7;
-    border: 1px solid rgba(255,255,255,0.14);
-    padding: 7px 12px;
-    border-radius: 999px;
-    font-size: 11px;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    font-family: inherit;
-    transition: background .2s ease;
-  }
-  .toolbar select { padding: 6px 10px; }
-  .toolbar select option { background: #1a1a1f; color: #f5f5f7; }
-  .toolbar select optgroup { color: #888; font-style: normal; }
-  .toolbar button:hover,
-  .toolbar select:hover { background: rgba(255,255,255,0.16); }
-  .toolbar button.active { background: #4a8cff; border-color: #4a8cff; color: #fff; }
- 
-  body.presenting .toolbar { opacity: 0.12; }
-  body.presenting .toolbar:hover { opacity: 1; }
- 
-  /* ---------- Stage scales the device to fit viewport ---------- */
-  .stage {
-    width: var(--phone-w);
-    height: var(--phone-h);
-    transform: scale(var(--scale, 1));
-    transform-origin: center center;
-    flex-shrink: 0;
-  }
- 
-  /* ---------- Device frame ---------- */
-  .device {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--phone-radius);
-    background: var(--frame);
-    box-shadow: var(--shadow),
-                inset 0 0 0 2px rgba(255,255,255,0.08),
-                inset 0 0 0 6px rgba(0,0,0,0.4);
-    padding: var(--phone-bezel);
-  }
-  .device::before {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    border-radius: calc(var(--phone-radius) - 2px);
-    pointer-events: none;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 22%),
-      linear-gradient(0deg,   rgba(255,255,255,0.04), rgba(255,255,255,0) 22%);
-  }
- 
-  /* Frame variants */
-  [data-frame="titanium"]    { --frame: linear-gradient(160deg, #2a2a2e 0%, #1c1c1f 35%, #131316 100%); }
-  [data-frame="graphite"]    { --frame: linear-gradient(160deg, #303034 0%, #1d1d20 40%, #0f0f12 100%); }
-  [data-frame="phantomblack"]{ --frame: linear-gradient(160deg, #18181a 0%, #0d0d0f 50%, #050506 100%); }
-  [data-frame="silver"]      { --frame: linear-gradient(160deg, #cdcdd0 0%, #9d9d9f 45%, #7a7a7c 100%); }
-  [data-frame="spaceblack"]  { --frame: linear-gradient(160deg, #25262a 0%, #15161a 45%, #0a0b0e 100%); }
- 
-  /* Side buttons */
-  .btn {
-    position: absolute;
-    background: linear-gradient(90deg, #1a1a1d, #3a3a3d, #1a1a1d);
-    border-radius: 2px;
-  }
-  .btn.left  { left: -3px; }
-  .btn.right { right: -3px; }
-  .btn.silent  { top: 95px;  width: 4px; height: 28px; }
-  .btn.left.vol-up  { top: 145px; width: 4px; height: 60px; }
-  .btn.left.vol-dn  { top: 220px; width: 4px; height: 60px; }
-  .btn.right.power  { top: 175px; width: 4px; height: 95px; }
- 
-  /* Hide right-side aux buttons unless device is Android */
-  .btn.right.vol-up, .btn.right.vol-dn { display: none; }
- 
-  [data-os="android"] .btn.silent      { display: none; }
-  [data-os="android"] .btn.left        { display: none; }
-  [data-os="android"] .btn.right.vol-up{ display: block; top: 130px; width: 4px; height: 50px; }
-  [data-os="android"] .btn.right.vol-dn{ display: block; top: 185px; width: 4px; height: 50px; }
-  [data-os="android"] .btn.right.power { display: block; top: 250px; width: 4px; height: 70px; }
- 
-  [data-form="tablet"] .btn { display: none; }
- 
-  /* Screen */
-  .screen {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--screen-radius);
-    background: var(--band-bg);
-    overflow: hidden;
-  }
-  .webapp-frame {
-    position: absolute;
-    top: var(--safe-top);
-    left: 0;
-    right: 0;
-    bottom: var(--safe-bottom);
-    width: 100%;
-    height: calc(100% - var(--safe-top) - var(--safe-bottom));
-    border: 0;
-    background: var(--band-bg);
-  }
-  .band {
-    position: absolute;
-    left: 0; right: 0;
-    background: var(--band-bg);
-    z-index: 3;
-  }
-  .band.top    { top: 0;    height: var(--safe-top); }
-  .band.bottom { bottom: 0; height: var(--safe-bottom); }
- 
-  /* Notches / cutouts */
-  .notch { display: none; position: absolute; z-index: 5; }
- 
-  .notch-island {
-    top: 11px; left: 50%; transform: translateX(-50%);
-    width: 124px; height: 37px;
-    background: #050505; border-radius: 20px;
-  }
-  [data-notch="island"]       .notch-island { display: block; }
-  [data-notch="island-small"] .notch-island { display: block; width: 105px; height: 33px; }
- 
-  .notch-classic {
-    top: 0; left: 50%; transform: translateX(-50%);
-    width: 210px; height: 30px;
-    background: #050505; border-radius: 0 0 18px 18px;
-  }
-  [data-notch="classic"] .notch-classic { display: block; }
- 
-  .notch-punch {
-    top: 12px; left: 50%; transform: translateX(-50%);
-    width: 10px; height: 10px;
-    background: #050505; border-radius: 50%;
-  }
-  [data-notch="punch"] .notch-punch { display: block; }
- 
-  .notch-ipad {
-    top: 0; left: 50%; transform: translateX(-50%);
-    width: 64px; height: 18px;
-    background: #050505; border-radius: 0 0 12px 12px;
-  }
-  [data-notch="ipad"] .notch-ipad { display: block; }
- 
-  .notch-tab {
-    top: 0; left: 50%; transform: translateX(-50%);
-    width: 70px; height: 18px;
-    background: #050505; border-radius: 0 0 12px 12px;
-  }
-  [data-notch="tab"] .notch-tab { display: block; }
- 
-  /* Status bar */
-  .status-bar {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: var(--safe-top);
-    z-index: 4;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 32px 0;
-    color: var(--ios-fg);
-    font-size: 15px;
-    font-weight: 600;
-    pointer-events: none;
-    font-feature-settings: "tnum";
-  }
-  [data-os="android"] .status-bar { font-weight: 500; padding: 18px 26px 0; }
-  .status-bar .icons { display: flex; align-items: center; gap: 6px; }
-  .signal {
-    display: inline-block; width: 17px; height: 11px;
-    background:
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) left bottom / 3px 30%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 4px  bottom / 3px 50%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 8px  bottom / 3px 75%  no-repeat,
-      linear-gradient(to top, var(--ios-fg) 100%, var(--ios-fg) 100%) 12px bottom / 3px 100% no-repeat;
-  }
-  .wifi {
-    display: inline-block; width: 16px; height: 11px;
-    background: var(--ios-fg);
-    -webkit-mask:
-      radial-gradient(circle at 50% 100%, #000 1.5px, transparent 2px) no-repeat,
-      radial-gradient(circle at 50% 100%, transparent 4px, #000 4.5px, #000 6px, transparent 6.5px) no-repeat,
-      radial-gradient(circle at 50% 100%, transparent 7.5px, #000 8px, #000 9.5px, transparent 10px) no-repeat;
-            mask:
-      radial-gradient(circle at 50% 100%, #000 1.5px, transparent 2px) no-repeat,
-      radial-gradient(circle at 50% 100%, transparent 4px, #000 4.5px, #000 6px, transparent 6.5px) no-repeat,
-      radial-gradient(circle at 50% 100%, transparent 7.5px, #000 8px, #000 9.5px, transparent 10px) no-repeat;
-  }
-  .battery {
-    position: relative; display: inline-block;
-    width: 26px; height: 12px;
-    border: 1px solid color-mix(in srgb, var(--ios-fg) 55%, transparent);
-    border-radius: 3px; padding: 1px;
-  }
-  .battery::after {
-    content: ""; position: absolute; right: -3px; top: 3px;
-    width: 2px; height: 6px;
-    background: color-mix(in srgb, var(--ios-fg) 55%, transparent);
-    border-radius: 1px;
-  }
-  .battery .level { display: block; width: 80%; height: 100%; background: var(--ios-fg); border-radius: 1px; }
- 
-  /* Home indicator */
-  .home-indicator {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 134px;
-    height: 5px;
-    background: color-mix(in srgb, var(--ios-fg) 85%, transparent);
-    border-radius: 3px;
-    z-index: 6;
-  }
-  [data-os="android"] .home-indicator { width: 110px; height: 4px; bottom: 10px; }
-  [data-form="tablet"] .home-indicator { width: 180px; }
- 
-  .hint {
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #555560;
-    font-size: 10px;
-    opacity: 0;
-    transition: opacity .25s ease;
-    pointer-events: none;
-  }
-  body.presenting .hint { opacity: 0.6; }
+/* ==========================================================================
+   Veesion Device Preview — V2
+   ========================================================================== */
+:root {
+  --ui-bg: rgba(20, 21, 26, 0.74);
+  --ui-bg-solid: #17181d;
+  --ui-border: rgba(255, 255, 255, 0.10);
+  --ui-fg: #f2f2f5;
+  --ui-dim: rgba(242, 242, 245, 0.56);
+  --ui-hover: rgba(255, 255, 255, 0.08);
+  --accent: #5b8cff;
+
+  --page-fg: #f2f2f5;
+  --page-dim: rgba(242, 242, 245, 0.58);
+  --custom-bg: #1b1f2a;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--page-fg);
+  background: #08090c;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body.overflow { overflow: auto; }
+body.idle, body.idle * { cursor: none; }
+body.idle iframe { cursor: auto; }
+
+/* ---------- Backdrops ---------- */
+#backdrop { position: fixed; inset: 0; z-index: -1; transition: background .4s ease; }
+body[data-bg="midnight"] #backdrop {
+  background: radial-gradient(1200px 820px at 50% 38%, #1e2232 0%, #0c0d12 58%, #060608 100%);
+}
+body[data-bg="aurora"] #backdrop {
+  background:
+    radial-gradient(640px 520px at 18% 22%, rgba(91, 140, 255, .34), transparent 62%),
+    radial-gradient(720px 620px at 86% 78%, rgba(0, 196, 170, .22), transparent 62%),
+    radial-gradient(520px 420px at 72% 12%, rgba(168, 92, 255, .24), transparent 62%),
+    #08090d;
+}
+body[data-bg="studio"] #backdrop {
+  background: radial-gradient(1300px 900px at 50% 28%, #ffffff 0%, #eceef2 52%, #d8dbe1 100%);
+}
+body[data-bg="black"]  #backdrop { background: #000; }
+body[data-bg="custom"] #backdrop { background: var(--custom-bg); }
+body[data-bg="studio"] { --page-fg: #16171b; --page-dim: rgba(22, 23, 27, .58); }
+
+/* ---------- Layout ---------- */
+#layout {
+  min-height: 100%;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+  gap: clamp(32px, 5vw, 88px);
+  padding: 20px 32px var(--reserve-bottom, 28px);
+}
+#devices {
+  display: flex;
+  align-items: flex-end;
+  gap: 72px;
+  transition: opacity .18s ease, transform .18s ease;
+}
+#devices.swapping { opacity: 0; transform: scale(.97); }
+
+/* ---------- Caption ---------- */
+.caption {
+  display: none;
+  width: clamp(240px, 26vw, 440px);
+  flex-shrink: 0;
+}
+body.caption-on .caption { display: block; }
+.caption [contenteditable] { outline: none; border-radius: 6px; transition: box-shadow .15s; }
+.caption [contenteditable]:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--page-fg) 18%, transparent); }
+.caption [contenteditable]:focus { box-shadow: 0 0 0 2px var(--accent); }
+.caption .eyebrow {
+  font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.caption h1 {
+  font-size: clamp(30px, 3.4vw, 54px); line-height: 1.04; letter-spacing: -.025em;
+  font-weight: 700; margin: 0 0 18px; text-wrap: balance;
+}
+.caption p {
+  font-size: clamp(15px, 1.25vw, 19px); line-height: 1.5; color: var(--page-dim);
+  margin: 0; white-space: pre-line; text-wrap: pretty;
+}
+
+/* ---------- Device ---------- */
+.slot { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.slot[hidden] { display: none; }
+.sizer { position: relative; flex-shrink: 0; }
+.sizer::after {                                   /* soft floor shadow */
+  content: ""; position: absolute; left: 12%; right: 12%; bottom: -26px; height: 36px;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .5), transparent);
+  filter: blur(10px); z-index: -1; pointer-events: none;
+}
+.dev-label { display: none; font-size: 13px; font-weight: 500; color: var(--page-dim); letter-spacing: .01em; }
+body.labels .dev-label, body.duo .dev-label { display: block; }
+
+.device {
+  --m: #333;
+  --m-hi: color-mix(in srgb, var(--m) 62%, white);
+  --m-lo: color-mix(in srgb, var(--m) 62%, black);
+  position: absolute; left: 0; top: 0;
+  width: var(--ow); height: var(--oh);
+  transform-origin: 0 0;
+  border-radius: var(--or);
+  padding: var(--ring);
+  background: linear-gradient(135deg, var(--m-hi) 0%, var(--m) 16%, var(--m-lo) 46%, var(--m) 74%, var(--m-hi) 100%);
+  box-shadow:
+    0 50px 90px -30px rgba(0, 0, 0, .65),
+    0 22px 40px -20px rgba(0, 0, 0, .55);
+}
+.device::after {                                  /* edge highlight on the metal band */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--m-hi) 70%, white),
+    inset 0 2px 2px rgba(255, 255, 255, .25),
+    inset 0 -2px 3px rgba(0, 0, 0, .35);
+}
+.bezel {
+  position: relative; width: 100%; height: 100%;
+  border-radius: calc(var(--or) - var(--ring));
+  background: #050506;
+  padding: var(--bz);
+  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .9), inset 0 0 0 3px rgba(255, 255, 255, .05);
+}
+.screen {
+  position: relative; width: var(--sw); height: var(--sh);
+  border-radius: var(--sr); overflow: hidden; isolation: isolate;
+  background: var(--band, #fff);
+  --fg: #000;
+}
+body.status-light .screen { --fg: #fff; }
+
+/* Hardware buttons (positioned by script) */
+.hw {
+  position: absolute; border-radius: 2px;
+  background: linear-gradient(90deg, var(--m-lo), var(--m-hi) 50%, var(--m-lo));
+}
+.hw.h { background: linear-gradient(180deg, var(--m-lo), var(--m-hi) 50%, var(--m-lo)); }
+.hw.flush { opacity: .75; }
+
+/* Bezel camera (tablets) */
+.bezel-cam {
+  display: none; position: absolute; width: 9px; height: 9px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #2b3550 0 18%, #0b0d14 45%, #000 70%);
+  box-shadow: 0 0 0 1.5px #111;
+}
+[data-cut="bezelcam"] .bezel-cam { display: block; left: calc(var(--bz) / 2 - 4.5px); top: 50%; transform: translateY(-50%); }
+[data-cut="bezelcam"][data-orient="landscape"] .bezel-cam { left: 50%; top: calc(var(--bz) / 2 - 4.5px); transform: translateX(-50%); }
+
+/* Screen cutouts */
+.cut { display: none; position: absolute; z-index: 8; background: #000; pointer-events: none; }
+.cut .lens {
+  position: absolute; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #3a4a78 0 12%, #121828 40%, #050608 70%);
+}
+[data-cut="island"] .cut {
+  display: block; width: 126px; height: 37px; left: 50%; top: 11px;
+  transform: translateX(-50%); border-radius: 20px;
+}
+[data-cut="island"] .cut .lens { right: 13px; top: 13px; }
+[data-cut="island"][data-orient="landscape"] .cut {
+  width: 37px; height: 126px; left: 11px; top: 50%; transform: translateY(-50%);
+}
+[data-cut="island"][data-orient="landscape"] .cut .lens { right: auto; top: auto; left: 13px; bottom: 13px; }
+
+[data-cut="notch"] .cut {
+  display: block; width: 210px; height: 31px; left: 50%; top: 0;
+  transform: translateX(-50%); border-radius: 0 0 21px 21px;
+}
+[data-cut="notch"] .cut .lens { right: 52px; top: 10px; }
+[data-cut="notch"][data-orient="landscape"] .cut {
+  width: 31px; height: 210px; left: 0; top: 50%; transform: translateY(-50%); border-radius: 0 21px 21px 0;
+}
+[data-cut="notch"][data-orient="landscape"] .cut .lens { right: auto; left: 10px; top: auto; bottom: 52px; }
+
+[data-cut="punch"] .cut {
+  display: block; width: 12px; height: 12px; left: 50%; top: 12px;
+  transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #26304d 0 14%, #050608 55%);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .55);
+}
+[data-cut="punch"][data-orient="landscape"] .cut { left: 12px; top: 50%; transform: translateY(-50%); }
+
+[data-cut="tabnotch"] .cut {
+  display: block; width: 18px; height: 72px; left: 0; top: 50%;
+  transform: translateY(-50%); border-radius: 0 12px 12px 0;
+}
+[data-cut="tabnotch"] .cut .lens { width: 8px; height: 8px; left: 4px; top: 32px; }
+[data-cut="tabnotch"][data-orient="landscape"] .cut {
+  width: 72px; height: 18px; left: 50%; top: 0; transform: translateX(-50%); border-radius: 0 0 12px 12px;
+}
+[data-cut="tabnotch"][data-orient="landscape"] .cut .lens { left: 32px; top: 4px; }
+
+/* Status bar */
+.sb {
+  position: absolute; top: 0; left: 0; right: 0; height: var(--it); z-index: 7;
+  display: grid; grid-template-columns: 1fr var(--mid, 0px) 1fr; align-items: center;
+  color: var(--fg); pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.sb .time { justify-self: center; font-weight: 600; font-size: 17px; letter-spacing: -.01em; padding-left: 10px; }
+.sb .icons { justify-self: center; display: flex; align-items: center; gap: 6px; padding-right: 6px; }
+.sb svg { display: block; fill: currentColor; }
+[data-os="ios"][data-form="phone"] .sb { --mid: var(--cutw); }
+[data-os="ios"][data-form="phone"][data-orient="landscape"] .sb { display: none; }
+[data-form="tablet"] .sb { padding: 0 26px; }
+[data-form="tablet"] .sb .time { justify-self: start; font-size: 14px; padding: 0; }
+[data-form="tablet"] .sb .icons { justify-self: end; padding: 0; }
+[data-os="android"] .sb { padding: 0 22px; font-family: Roboto, "Google Sans", system-ui, sans-serif; }
+[data-os="android"] .sb .time { justify-self: start; font-weight: 500; font-size: 14px; padding: 0; }
+[data-os="android"] .sb .icons { justify-self: end; gap: 5px; padding: 0; }
+[data-os="android"][data-orient="landscape"][data-form="phone"] .sb { padding-left: 52px; }
+
+/* App frame */
+.app {
+  position: absolute; z-index: 1;
+  top: var(--it); left: var(--il);
+  width: calc(var(--sw) - var(--il) - var(--ir));
+  height: calc(var(--sh) - var(--it) - var(--ib));
+  border: 0; background: var(--band, #fff);
+}
+.loading {
+  position: absolute; z-index: 2; inset: var(--it) var(--ir) var(--ib) var(--il);
+  display: grid; place-items: center; background: var(--band, #fff);
+  transition: opacity .35s ease;
+}
+.slot.loaded .loading { opacity: 0; pointer-events: none; }
+.spin {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2.5px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-top-color: color-mix(in srgb, var(--fg) 55%, transparent);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.home {
+  position: absolute; z-index: 9; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: 140px; height: 5px; border-radius: 3px; pointer-events: none;
+  background: color-mix(in srgb, var(--fg) 88%, transparent);
+}
+[data-os="ios"][data-orient="landscape"] .home { width: 200px; }
+[data-form="tablet"] .home { width: 210px; }
+[data-os="android"] .home { width: 108px; height: 4px; bottom: 7px; }
+
+.glare {
+  display: none; position: absolute; inset: 0; z-index: 10; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .04) 28%, rgba(255, 255, 255, 0) 42%);
+}
+body.glare .glare { display: block; }
+
+/* ---------- Ink layer (laser / draw) ---------- */
+#ink { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+body[data-tool="laser"] #ink { pointer-events: auto; cursor: none; }
+body[data-tool="draw"]  #ink { pointer-events: auto; cursor: crosshair; }
+
+/* ---------- Dock ---------- */
+.dock {
+  position: fixed; left: 50%; bottom: 18px; z-index: 50;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px;
+  padding: 6px; border-radius: 18px;
+  background: var(--ui-bg); color: var(--ui-fg);
+  border: 1px solid var(--ui-border);
+  backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .38);
+  font-size: 13px; font-weight: 500;
+  transition: opacity .3s ease, transform .3s var(--ease);
+  max-width: calc(100vw - 24px);
+}
+body.idle .dock, body.clean .dock { opacity: 0; transform: translate(-50%, 18px); pointer-events: none; }
+.sep { width: 1px; height: 22px; background: var(--ui-border); margin: 0 5px; flex-shrink: 0; }
+
+.ib {
+  position: relative; flex-shrink: 0;
+  width: 36px; height: 36px; display: grid; place-items: center;
+  border: 0; border-radius: 11px; background: transparent; color: inherit; cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.ib:hover { background: var(--ui-hover); }
+.ib.on { background: var(--accent); color: #fff; }
+.ib:focus-visible, .swatch:focus-visible, .seg button:focus-visible, .tog:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ib svg, .sel > svg, .url > svg {
+  width: 19px; height: 19px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; pointer-events: none;
+  background: var(--ui-bg-solid); color: var(--ui-fg); border: 1px solid var(--ui-border);
+  font-size: 12px; font-weight: 500; padding: 6px 9px; border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+}
+.dock.pop-open [data-tip]:hover::after { display: none; }
+
+.sel { position: relative; display: flex; align-items: center; gap: 4px; padding-left: 9px; height: 36px; border-radius: 11px; flex-shrink: 0; }
+.sel:hover { background: var(--ui-hover); }
+.sel select, .row select {
+  appearance: none; -webkit-appearance: none;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center / 12px;
+  border: 0; color: inherit; font: inherit; height: 36px; padding: 0 28px 0 4px; cursor: pointer; outline: none;
+}
+.sel select option, .row select option, .sel select optgroup, .row select optgroup { background: var(--ui-bg-solid); color: var(--ui-fg); }
+
+.swatches { display: flex; align-items: center; gap: 8px; padding: 0 8px 0 4px; flex-shrink: 0; }
+.swatch {
+  position: relative; width: 18px; height: 18px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 70%, white), var(--c) 45%, color-mix(in srgb, var(--c) 70%, black));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(0, 0, 0, .4);
+  transition: transform .15s ease;
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch.on { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 2px var(--ui-bg-solid), 0 0 0 3.5px #fff; }
+
+.url { position: relative; display: flex; align-items: center; flex: 0 1 auto; min-width: 0; }
+.url > svg { position: absolute; left: 10px; width: 16px; height: 16px; color: var(--ui-dim); pointer-events: none; }
+.url input {
+  width: 250px; min-width: 120px; height: 36px; border-radius: 11px;
+  border: 1px solid transparent; background: rgba(255, 255, 255, .06); color: inherit;
+  font: 12.5px/1 ui-monospace, "SF Mono", Menlo, monospace; padding: 0 10px 0 32px; outline: none;
+  transition: border-color .15s, background .15s, width .25s var(--ease);
+}
+.url input:focus { border-color: var(--accent); background: rgba(255, 255, 255, .09); width: 340px; }
+@media (max-width: 1100px) { .url input { width: 170px; } .url input:focus { width: 240px; } }
+@media (max-width: 860px)  { .url { display: none; } .swatches { display: none; } }
+
+/* ---------- Popovers ---------- */
+.pop {
+  position: absolute; bottom: calc(100% + 12px); right: 0; width: 320px;
+  background: var(--ui-bg-solid); color: var(--ui-fg);
+  border: 1px solid var(--ui-border); border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+  padding: 8px 14px 12px; display: none;
+}
+.pop.open { display: block; animation: pop-in .18s var(--ease); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px); } }
+.pop h3 { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ui-dim); margin: 10px 0 6px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 38px; }
+.row > span { color: var(--ui-fg); }
+.row .sel-wrap { display: flex; align-items: center; gap: 6px; }
+.row select { height: 32px; background-color: rgba(255, 255, 255, .06); border-radius: 9px; padding-left: 10px; max-width: 170px; }
+
+.seg { display: inline-flex; background: rgba(255, 255, 255, .06); border-radius: 9px; padding: 2px; }
+.seg button {
+  border: 0; background: transparent; color: var(--ui-dim); font: inherit; font-size: 12px;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer;
+}
+.seg button.on { background: rgba(255, 255, 255, .14); color: var(--ui-fg); }
+
+.bgs { display: flex; gap: 8px; align-items: center; }
+.bgchip {
+  width: 30px; height: 30px; border-radius: 9px; border: 0; cursor: pointer; padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15);
+}
+.bgchip.on { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15), 0 0 0 2px var(--ui-bg-solid), 0 0 0 3.5px var(--accent); }
+.bgchip[data-v="midnight"] { background: radial-gradient(circle at 50% 35%, #2a3046, #0b0c10); }
+.bgchip[data-v="aurora"]   { background: radial-gradient(circle at 20% 25%, #4a6fd0, transparent 60%), radial-gradient(circle at 85% 80%, #0aa58f, transparent 60%), #0b0c12; }
+.bgchip[data-v="studio"]   { background: radial-gradient(circle at 50% 30%, #fff, #d6d9df); }
+.bgchip[data-v="black"]    { background: #000; }
+.colorchip { position: relative; overflow: hidden; }
+.colorchip input { position: absolute; inset: -8px; width: 46px; height: 46px; border: 0; padding: 0; cursor: pointer; opacity: 0; }
+.colorchip { background: conic-gradient(#ff5e5e, #ffcc4d, #5be37d, #4dc3ff, #8b6bff, #ff5ec8, #ff5e5e); }
+.colorbox { width: 32px; height: 26px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); position: relative; }
+.colorbox input { position: absolute; inset: -6px; width: 44px; height: 38px; border: 0; padding: 0; cursor: pointer; }
+
+.tog {
+  position: relative; width: 38px; height: 22px; border-radius: 11px; border: 0; cursor: pointer;
+  background: rgba(255, 255, 255, .16); transition: background .2s ease; flex-shrink: 0;
+}
+.tog::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; transition: transform .2s var(--ease); box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+}
+.tog.on { background: #34c759; }
+.tog.on::after { transform: translateX(16px); }
+.pop .swatches { padding: 0; }
+
+/* ---------- Help ---------- */
+.help {
+  position: fixed; inset: 0; z-index: 60; display: none; place-items: center;
+  background: rgba(0, 0, 0, .45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.help.open { display: grid; animation: pop-in .18s var(--ease); }
+.help .card {
+  width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+  background: var(--ui-bg-solid); color: var(--ui-fg);
+  border: 1px solid var(--ui-border); border-radius: 18px; padding: 22px 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+}
+.help h2 { margin: 0 0 4px; font-size: 18px; }
+.help .sub { margin: 0 0 16px; color: var(--ui-dim); font-size: 13px; line-height: 1.5; }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; }
+.keys div { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--ui-border); }
+kbd {
+  font: 600 11px/1 ui-monospace, "SF Mono", Menlo, monospace; min-width: 22px; text-align: center;
+  padding: 5px 6px; border-radius: 6px; background: rgba(255, 255, 255, .08); border: 1px solid var(--ui-border);
+}
+@media (max-width: 560px) { .keys { grid-template-columns: 1fr; } }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; top: 18px; left: 50%; z-index: 70;
+  transform: translate(-50%, -12px); opacity: 0; pointer-events: none;
+  background: var(--ui-bg-solid); color: var(--ui-fg); border: 1px solid var(--ui-border);
+  padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+  transition: opacity .25s ease, transform .25s var(--ease);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
 </head>
-<body class="presenting">
- 
-  <div class="toolbar">
-    <select id="deviceSelect" title="Pick a device">
-      <optgroup label="iOS">
-        <option value="iphone-12-pmax">iPhone 12 Pro Max</option>
-        <option value="iphone-15-pmax" selected>iPhone 15 Pro Max</option>
-        <option value="iphone-17-pmax">iPhone 17 Pro Max</option>
-        <option value="ipad-pro-m4">iPad Pro M4 13"</option>
-      </optgroup>
-      <optgroup label="Android (Samsung)">
-        <option value="galaxy-s21-ultra">Galaxy S21 Ultra</option>
-        <option value="galaxy-s24-ultra">Galaxy S24 Ultra</option>
-        <option value="galaxy-s25-ultra">Galaxy S25 Ultra</option>
-        <option value="galaxy-tab-s10-ultra">Galaxy Tab S10 Ultra</option>
-      </optgroup>
-    </select>
-    <button id="reloadBtn" title="Reload (R)">↻</button>
-    <button id="presentBtn" title="Toggle title (P)">▣</button>
-    <button id="fsBtn" title="Fullscreen (F)">⛶</button>
-  </div>
- 
-  <div class="stage" id="stage">
-    <div class="device" id="device">
-      <span class="btn left silent"></span>
-      <span class="btn left vol-up"></span>
-      <span class="btn left vol-dn"></span>
-      <span class="btn right power"></span>
-      <span class="btn right vol-up"></span>
-      <span class="btn right vol-dn"></span>
- 
-      <div class="screen">
-        <div class="band top"></div>
-        <div class="band bottom"></div>
- 
-        <div class="notch notch-island"></div>
-        <div class="notch notch-classic"></div>
-        <div class="notch notch-punch"></div>
-        <div class="notch notch-ipad"></div>
-        <div class="notch notch-tab"></div>
- 
-        <div class="status-bar">
-          <span class="time" id="clock">9:41</span>
-          <span class="icons">
-            <span class="signal" aria-hidden="true"></span>
-            <span class="wifi" aria-hidden="true"></span>
-            <span class="battery"><span class="level"></span></span>
-          </span>
+<body data-bg="midnight">
+
+<div id="backdrop"></div>
+
+<main id="layout">
+  <section class="caption" id="caption" aria-label="Caption">
+    <div class="eyebrow" contenteditable="plaintext-only" spellcheck="false" data-k="eyebrow"></div>
+    <h1 contenteditable="plaintext-only" spellcheck="false" data-k="title"></h1>
+    <p contenteditable="plaintext-only" spellcheck="false" data-k="body"></p>
+  </section>
+  <div id="devices"></div>
+</main>
+
+<canvas id="ink"></canvas>
+
+<template id="slotTpl">
+  <figure class="slot">
+    <div class="sizer">
+      <div class="device">
+        <div class="bezel">
+          <i class="bezel-cam"></i>
+          <div class="screen">
+            <div class="sb"><span class="time">9:41</span><span></span><span class="icons"></span></div>
+            <div class="cut"><i class="lens"></i></div>
+            <iframe class="app" title="App preview"
+              allow="clipboard-read; clipboard-write; geolocation; camera; microphone; fullscreen"
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="loading"><span class="spin"></span></div>
+            <div class="home"></div>
+            <div class="glare"></div>
+          </div>
         </div>
- 
-        <iframe
-          id="app"
-          class="webapp-frame"
-          src="https://store.veesion.io/stores"
-          title="Veesion Store"
-          allow="clipboard-read; clipboard-write; geolocation; camera; microphone"
-          referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
- 
-        <div class="home-indicator"></div>
       </div>
     </div>
+    <figcaption class="dev-label"></figcaption>
+  </figure>
+</template>
+
+<nav class="dock" id="dock" aria-label="Preview controls">
+  <label class="sel" data-tip="Device  ← →">
+    <svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.5h3"/></svg>
+    <select id="deviceSel" aria-label="Device"></select>
+  </label>
+  <div class="swatches" id="swatches"></div>
+  <span class="sep"></span>
+  <button class="ib" data-act="rotate" data-tip="Rotate  O" aria-label="Rotate">
+    <svg viewBox="0 0 24 24"><rect x="3" y="9" width="13" height="12" rx="2"/><path d="M8 5.5a8 8 0 0 1 11.5 6.5"/><path d="m21.5 9.5-2 2.6-2.4-2.2"/></svg>
+  </button>
+  <button class="ib" data-act="duo" data-tip="Side by side  2" aria-label="Side by side">
+    <svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="8" height="16" rx="2"/><rect x="13.5" y="4" width="8" height="16" rx="2"/></svg>
+  </button>
+  <span class="sep"></span>
+  <form class="url" id="urlForm" autocomplete="off">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9M12 3C9.5 5.6 8.2 8.6 8.2 12s1.3 6.4 3.8 9"/></svg>
+    <input id="urlInput" list="urlList" spellcheck="false" aria-label="App URL" />
+    <datalist id="urlList"></datalist>
+  </form>
+  <button class="ib" data-act="reload" data-tip="Reload  R" aria-label="Reload">
+    <svg viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1L20.5 8.5"/><path d="M20.5 3.5v5h-5"/></svg>
+  </button>
+  <span class="sep"></span>
+  <button class="ib" data-act="laser" data-tip="Laser pointer  L" aria-label="Laser pointer">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+  </button>
+  <button class="ib" data-act="draw" data-tip="Draw  D" aria-label="Draw">
+    <svg viewBox="0 0 24 24"><path d="M4 20l1-4.2L16.3 4.5a2.1 2.1 0 0 1 3 3L8 18.8z"/><path d="M14.5 6.3l3.2 3.2"/></svg>
+  </button>
+  <span class="sep"></span>
+  <button class="ib" data-act="caption" data-tip="Caption  T" aria-label="Caption">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 11h11M4 16h7"/></svg>
+  </button>
+  <button class="ib" data-act="settings" data-tip="Settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+  </button>
+  <button class="ib" data-act="share" data-tip="Copy link to this setup" aria-label="Copy link">
+    <svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+  </button>
+  <button class="ib" data-act="fullscreen" data-tip="Fullscreen  F" aria-label="Fullscreen">
+    <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+  </button>
+  <button class="ib" data-act="help" data-tip="Shortcuts  ?" aria-label="Shortcuts">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.6"/><path d="M12 17h.01"/></svg>
+  </button>
+
+  <div class="pop" id="settings" role="dialog" aria-label="Settings">
+    <h3>Background</h3>
+    <div class="row">
+      <div class="bgs" id="bgs">
+        <button class="bgchip" data-v="midnight" aria-label="Midnight"></button>
+        <button class="bgchip" data-v="aurora" aria-label="Aurora"></button>
+        <button class="bgchip" data-v="studio" aria-label="Studio"></button>
+        <button class="bgchip" data-v="black" aria-label="Black"></button>
+        <label class="bgchip colorchip" data-v="custom" aria-label="Custom colour"><input type="color" id="customBg" /></label>
+      </div>
+    </div>
+
+    <h3>Screen</h3>
+    <div class="row"><span>Status bar text</span>
+      <div class="seg" data-k="status"><button data-v="dark">Dark</button><button data-v="light">Light</button></div>
+    </div>
+    <div class="row"><span>Screen colour behind the app</span>
+      <div class="colorbox"><input type="color" id="bandColor" aria-label="Screen colour" /></div>
+    </div>
+    <div class="row"><span>Clock</span>
+      <div class="seg" data-k="clock"><button data-v="live">Live</button><button data-v="941">9:41</button></div>
+    </div>
+    <div class="row"><span>Size</span>
+      <div class="seg" data-k="zoom"><button data-v="fit">Fit</button><button data-v="1">Actual</button></div>
+    </div>
+
+    <h3>Side by side</h3>
+    <div class="row"><span>Second device</span>
+      <select id="device2Sel" aria-label="Second device"></select>
+    </div>
+    <div class="row"><span>Finish</span><div class="swatches" id="swatches2"></div></div>
+
+    <h3>Display</h3>
+    <div class="row"><span>Device names</span><button class="tog" data-k="labels" aria-label="Device names"></button></div>
+    <div class="row"><span>Screen glare</span><button class="tog" data-k="glare" aria-label="Screen glare"></button></div>
+    <div class="row"><span>Auto-hide toolbar</span><button class="tog" data-k="autohide" aria-label="Auto-hide toolbar"></button></div>
   </div>
- 
-  <div class="hint">
-    P · title &nbsp; F · fullscreen &nbsp; R · reload
+</nav>
+
+<div class="help" id="help" role="dialog" aria-label="Keyboard shortcuts">
+  <div class="card">
+    <h2>Keyboard shortcuts</h2>
+    <p class="sub">Shortcuts work while the page around the phone has focus. If you've just clicked inside the app, click the background once first.</p>
+    <div class="keys">
+      <div>Next / previous device <span><kbd>→</kbd> <kbd>←</kbd></span></div>
+      <div>Rotate <kbd>O</kbd></div>
+      <div>Side by side <kbd>2</kbd></div>
+      <div>Reload app <kbd>R</kbd></div>
+      <div>Laser pointer <kbd>L</kbd></div>
+      <div>Draw <kbd>D</kbd></div>
+      <div>Clear drawings <kbd>C</kbd></div>
+      <div>Caption <kbd>T</kbd></div>
+      <div>Next background <kbd>B</kbd></div>
+      <div>Fit / actual size <kbd>Z</kbd></div>
+      <div>Hide toolbar completely <kbd>P</kbd></div>
+      <div>Fullscreen <kbd>F</kbd></div>
+      <div>Close / stop tool <kbd>Esc</kbd></div>
+      <div>This panel <kbd>?</kbd></div>
+    </div>
   </div>
- 
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
 <script>
-  // ============================================================
-  // Device catalog
-  // ============================================================
-  const DEVICES = {
-    'iphone-12-pmax': {
-      label: 'iPhone 12 Pro Max', os: 'ios', form: 'phone',
-      width: 428, height: 926,
-      radius: 50, bezel: 11, screenRadius: 39,
-      notch: 'classic', frame: 'graphite',
-      safeTop: 50, safeBottom: 30,
-    },
-    'iphone-15-pmax': {
-      label: 'iPhone 15 Pro Max', os: 'ios', form: 'phone',
-      width: 430, height: 932,
-      radius: 56, bezel: 12, screenRadius: 44,
-      notch: 'island', frame: 'titanium',
-      safeTop: 54, safeBottom: 34,
-    },
-    'iphone-17-pmax': {
-      label: 'iPhone 17 Pro Max', os: 'ios', form: 'phone',
-      width: 444, height: 956,
-      radius: 58, bezel: 10, screenRadius: 48,
-      notch: 'island-small', frame: 'titanium',
-      safeTop: 54, safeBottom: 34,
-    },
-    'ipad-pro-m4': {
-      label: 'iPad Pro M4 13"', os: 'ios', form: 'tablet',
-      width: 1032, height: 1376,
-      radius: 38, bezel: 18, screenRadius: 22,
-      notch: 'ipad', frame: 'spaceblack',
-      safeTop: 38, safeBottom: 26,
-    },
-    'galaxy-s21-ultra': {
-      label: 'Galaxy S21 Ultra', os: 'android', form: 'phone',
-      width: 412, height: 915,
-      radius: 44, bezel: 10, screenRadius: 36,
-      notch: 'punch', frame: 'phantomblack',
-      safeTop: 50, safeBottom: 28,
-    },
-    'galaxy-s24-ultra': {
-      label: 'Galaxy S24 Ultra', os: 'android', form: 'phone',
-      width: 412, height: 915,
-      radius: 32, bezel: 8, screenRadius: 26,
-      notch: 'punch', frame: 'titanium',
-      safeTop: 50, safeBottom: 28,
-    },
-    'galaxy-s25-ultra': {
-      label: 'Galaxy S25 Ultra', os: 'android', form: 'phone',
-      width: 416, height: 920,
-      radius: 36, bezel: 8, screenRadius: 30,
-      notch: 'punch', frame: 'titanium',
-      safeTop: 50, safeBottom: 28,
-    },
-    'galaxy-tab-s10-ultra': {
-      label: 'Galaxy Tab S10 Ultra', os: 'android', form: 'tablet',
-      width: 1056, height: 1640,
-      radius: 22, bezel: 14, screenRadius: 12,
-      notch: 'tab', frame: 'graphite',
-      safeTop: 38, safeBottom: 26,
-    },
+(() => {
+  'use strict';
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  // ==========================================================================
+  // Device catalog — sizes are the browser viewport in CSS px (portrait).
+  // Buttons: side l/r/t, f = offset as a fraction of that edge, len in px.
+  // ==========================================================================
+  const B = {
+    iphonePro:   [{s:'l',f:.150,len:32},{s:'l',f:.212,len:62},{s:'l',f:.288,len:62},{s:'r',f:.245,len:98}],
+    iphone12:    [{s:'l',f:.150,len:28},{s:'l',f:.218,len:60},{s:'l',f:.292,len:60},{s:'r',f:.255,len:98}],
+    galaxy:      [{s:'r',f:.215,len:92},{s:'r',f:.335,len:54}],
+    ipad:        [{s:'t',f:.80,len:64},{s:'r',f:.055,len:58},{s:'r',f:.110,len:58}],
+    tab:         [{s:'r',f:.07,len:64},{s:'r',f:.135,len:84}],
   };
- 
-  const stage  = document.getElementById('stage');
-  const device = document.getElementById('device');
- 
-  function applyDevice(key) {
-    const d = DEVICES[key];
-    if (!d) return;
-    const root = document.documentElement;
-    root.style.setProperty('--phone-w',      d.width  + 'px');
-    root.style.setProperty('--phone-h',      d.height + 'px');
-    root.style.setProperty('--phone-radius', d.radius + 'px');
-    root.style.setProperty('--phone-bezel',  d.bezel  + 'px');
-    root.style.setProperty('--screen-radius',d.screenRadius + 'px');
-    root.style.setProperty('--safe-top',     d.safeTop    + 'px');
-    root.style.setProperty('--safe-bottom',  d.safeBottom + 'px');
- 
-    stage.dataset.device = key;
-    device.dataset.os    = d.os;
-    device.dataset.form  = d.form;
-    device.dataset.notch = d.notch;
-    device.dataset.frame = d.frame;
-    fit();
+  B.iphoneProCC = [...B.iphonePro, {s:'r',f:.565,len:54,flush:true}];
+
+  const IOS_PHONE_SAFE = (t) => ({ p:{t, b:34, l:0, r:0}, l:{t:0, b:21, l:t, r:t} });
+  const ANDROID_SAFE   = { p:{t:36, b:18, l:0, r:0}, l:{t:28, b:16, l:40, r:0} };
+
+  const DEVICES = [
+    { id:'iphone-12-pmax', name:'iPhone 12 Pro Max', group:'iPhone', os:'ios', form:'phone',
+      w:428, h:926, sr:53, bz:13, ring:4, cut:'notch', cutw:210, safe:IOS_PHONE_SAFE(47), buttons:B.iphone12,
+      colors:[['Graphite','#4b4a47'],['Pacific Blue','#2f4f60'],['Gold','#e3cfae'],['Silver','#dedfe1']] },
+    { id:'iphone-15-pmax', name:'iPhone 15 Pro Max', group:'iPhone', os:'ios', form:'phone',
+      w:430, h:932, sr:55, bz:11, ring:4, cut:'island', cutw:126, safe:IOS_PHONE_SAFE(59), buttons:B.iphonePro,
+      colors:[['Natural Titanium','#b1aca3'],['Blue Titanium','#3e4a5a'],['White Titanium','#e4e2dd'],['Black Titanium','#3a3a3c']] },
+    { id:'iphone-17-pro', name:'iPhone 17 Pro', group:'iPhone', os:'ios', form:'phone',
+      w:402, h:874, sr:58, bz:10, ring:4, cut:'island', cutw:126, safe:IOS_PHONE_SAFE(62), buttons:B.iphoneProCC,
+      colors:[['Deep Blue','#323c55'],['Cosmic Orange','#e07a3e'],['Silver','#d6d7da']] },
+    { id:'iphone-17-pmax', name:'iPhone 17 Pro Max', group:'iPhone', os:'ios', form:'phone',
+      w:440, h:956, sr:62, bz:10, ring:4, cut:'island', cutw:126, safe:IOS_PHONE_SAFE(62), buttons:B.iphoneProCC,
+      colors:[['Deep Blue','#323c55'],['Cosmic Orange','#e07a3e'],['Silver','#d6d7da']] },
+    { id:'ipad-pro-13-m4', name:'iPad Pro 13" (M4)', group:'iPad', os:'ios', form:'tablet',
+      w:1032, h:1376, sr:18, bz:22, ring:4, cut:'bezelcam', safe:{ p:{t:24,b:20,l:0,r:0}, l:{t:24,b:20,l:0,r:0} }, buttons:B.ipad,
+      colors:[['Space Black','#2a2a2c'],['Silver','#d5d6d8']] },
+    { id:'galaxy-s21-ultra', name:'Galaxy S21 Ultra', group:'Galaxy', os:'android', form:'phone',
+      w:384, h:854, sr:28, bz:7, ring:3, cut:'punch', safe:ANDROID_SAFE, buttons:B.galaxy,
+      colors:[['Phantom Black','#1d1d1f'],['Phantom Silver','#c8c9cc']] },
+    { id:'galaxy-s24-ultra', name:'Galaxy S24 Ultra', group:'Galaxy', os:'android', form:'phone',
+      w:384, h:832, sr:18, bz:8, ring:3, cut:'punch', safe:ANDROID_SAFE, buttons:B.galaxy,
+      colors:[['Titanium Gray','#8a8884'],['Titanium Black','#2c2c2d'],['Titanium Violet','#5c5468'],['Titanium Yellow','#d8d0b5']] },
+    { id:'galaxy-s25-ultra', name:'Galaxy S25 Ultra', group:'Galaxy', os:'android', form:'phone',
+      w:384, h:832, sr:30, bz:8, ring:3, cut:'punch', safe:ANDROID_SAFE, buttons:B.galaxy,
+      colors:[['Titanium Silverblue','#a3b1c1'],['Titanium Black','#2d2e30'],['Titanium Gray','#85837f'],['Titanium Whitesilver','#e2e2e0']] },
+    { id:'galaxy-tab-s10-ultra', name:'Galaxy Tab S10 Ultra', group:'Galaxy Tab', os:'android', form:'tablet',
+      w:924, h:1480, sr:14, bz:18, ring:4, cut:'tabnotch', safe:{ p:{t:32,b:18,l:0,r:0}, l:{t:32,b:18,l:0,r:0} }, buttons:B.tab,
+      colors:[['Moonstone Gray','#5a5c60'],['Platinum Silver','#cfd0d2']] },
+  ];
+  const DEV = Object.fromEntries(DEVICES.map(d => [d.id, d]));
+  const BGS = ['midnight', 'aurora', 'studio', 'black', 'custom'];
+
+  const ICONS = {
+    ios: `
+      <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="7.5" width="3" height="4.5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.6 5.6 9.1a3.4 3.4 0 0 1 4.8 0Z"/><path d="M3.3 6.8a6.6 6.6 0 0 1 9.4 0l-1.5 1.5a4.5 4.5 0 0 0-6.4 0Z"/><path d="M.9 4.4a10 10 0 0 1 14.2 0l-1.5 1.5a7.9 7.9 0 0 0-11.2 0Z"/></svg>
+      <svg width="27" height="13" viewBox="0 0 28 13"><rect x=".5" y=".5" width="24" height="12" rx="3.8" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="21" height="9" rx="2.3"/><path d="M26 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2Z" fill-opacity=".45"/></svg>`,
+    android: `
+      <svg width="16" height="13" viewBox="0 0 16 13"><path d="M8 12.6 0 3.3A12.4 12.4 0 0 1 8 .5c3 0 5.8 1 8 2.8Z"/></svg>
+      <svg width="13" height="13" viewBox="0 0 13 13"><path d="M13 0v13H0Z"/></svg>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M2.5 0h3v1.2h1.3c.7 0 1.2.5 1.2 1.2v10.4c0 .7-.5 1.2-1.2 1.2H1.2C.5 14 0 13.5 0 12.8V2.4c0-.7.5-1.2 1.2-1.2h1.3Z"/></svg>`,
+  };
+
+  // ==========================================================================
+  // State (saved in this browser; URL parameters override it)
+  // ==========================================================================
+  const KEY = 'veesion-device-preview:v2';
+  const DEFAULT_URL = 'https://store.next.veesion.io/';
+  const PREVIOUS_URL = 'https://store.veesion.io/stores';
+  const DEFAULTS = {
+    device: 'iphone-17-pmax', color: 0,
+    device2: 'galaxy-s25-ultra', color2: 0,
+    orient: 'portrait', duo: false,
+    url: DEFAULT_URL, history: [DEFAULT_URL, PREVIOUS_URL],
+    bg: 'midnight', customBg: '#1b1f2a',
+    status: 'dark', band: '#ffffff', clock: 'live', zoom: 'fit',
+    glare: false, labels: false, autohide: true, caption: false,
+    cap: { eyebrow: 'Veesion Store', title: 'Live app demo', body: 'Click any line of this caption to edit it.\nThe text is saved in this browser.' },
+  };
+
+  const S = load();
+  function load() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (_) {}
+    const s = { ...DEFAULTS, ...saved, cap: { ...DEFAULTS.cap, ...(saved.cap || {}) } };
+    // Browsers that last showed the old app move to the new version
+    if (s.url === PREVIOUS_URL) s.url = DEFAULT_URL;
+    s.history = [DEFAULT_URL, ...(s.history || []).filter(u => u !== DEFAULT_URL)].slice(0, 10);
+    const q = new URLSearchParams(location.search);
+    if (DEV[q.get('device')])  s.device  = q.get('device');
+    if (DEV[q.get('device2')]) s.device2 = q.get('device2');
+    if (q.has('color'))  s.color  = parseInt(q.get('color'), 10)  || 0;
+    if (q.has('color2')) s.color2 = parseInt(q.get('color2'), 10) || 0;
+    if (q.has('orient')) s.orient = q.get('orient') === 'landscape' ? 'landscape' : 'portrait';
+    if (q.has('duo'))    s.duo    = q.get('duo') === '1';
+    if (q.get('url'))    s.url    = normalizeUrl(q.get('url'));
+    if (BGS.includes(q.get('bg'))) s.bg = q.get('bg');
+    if (q.get('custom')) s.customBg = '#' + q.get('custom').replace(/^#/, '');
+    if (q.has('status')) s.status = q.get('status') === 'light' ? 'light' : 'dark';
+    if (q.get('band'))   s.band   = '#' + q.get('band').replace(/^#/, '');
+    if (q.has('caption')) s.caption = q.get('caption') === '1';
+    for (const k of ['eyebrow', 'title', 'body']) if (q.has(k)) s.cap[k] = q.get(k);
+    if (!DEV[s.device])  s.device  = DEFAULTS.device;
+    if (!DEV[s.device2]) s.device2 = DEFAULTS.device2;
+    return s;
   }
- 
-  // ============================================================
-  // Auto-scale to viewport
-  // ============================================================
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (_) {} }
+
+  function normalizeUrl(u) {
+    u = (u || '').trim();
+    if (!u) return DEFAULT_URL;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  // ==========================================================================
+  // Device slots — built once; switching device or rotating only restyles the
+  // frame, so the app keeps its current page and login.
+  // ==========================================================================
+  const devicesEl = $('#devices');
+  const slots = [0, 1].map(makeSlot);
+
+  function makeSlot() {
+    const el = $('#slotTpl').content.firstElementChild.cloneNode(true);
+    devicesEl.append(el);
+    const slot = {
+      el,
+      dev: $('.device', el),
+      sizer: $('.sizer', el),
+      iframe: $('.app', el),
+      label: $('.dev-label', el),
+      time: $('.time', el),
+      icons: $('.icons', el),
+      ow: 0, oh: 0, os: null, loadTimer: 0,
+    };
+    slot.iframe.addEventListener('load', () => {
+      if (slot.iframe.getAttribute('src')) el.classList.add('loaded');
+    });
+    return slot;
+  }
+
+  function loadSlot(slot, url) {
+    slot.el.classList.remove('loaded');
+    slot.iframe.src = url;
+    clearTimeout(slot.loadTimer);
+    slot.loadTimer = setTimeout(() => slot.el.classList.add('loaded'), 12000);
+  }
+
+  function applySlot(slot, key, colorIdx) {
+    const d = DEV[key];
+    const land = S.orient === 'landscape';
+    const sw = land ? d.h : d.w;
+    const sh = land ? d.w : d.h;
+    const ins = land ? d.safe.l : d.safe.p;
+    const pad = d.bz + d.ring;
+    const ow = sw + pad * 2, oh = sh + pad * 2;
+    const col = d.colors[colorIdx] || d.colors[0];
+
+    const v = slot.dev.style;
+    v.setProperty('--sw', sw + 'px');  v.setProperty('--sh', sh + 'px');
+    v.setProperty('--ow', ow + 'px');  v.setProperty('--oh', oh + 'px');
+    v.setProperty('--sr', d.sr + 'px');
+    v.setProperty('--or', (d.sr + pad) + 'px');
+    v.setProperty('--bz', d.bz + 'px');
+    v.setProperty('--ring', d.ring + 'px');
+    v.setProperty('--it', ins.t + 'px'); v.setProperty('--ib', ins.b + 'px');
+    v.setProperty('--il', ins.l + 'px'); v.setProperty('--ir', ins.r + 'px');
+    v.setProperty('--cutw', (d.cutw || 0) + 'px');
+    v.setProperty('--m', col[1]);
+
+    Object.assign(slot.dev.dataset, { os: d.os, form: d.form, cut: d.cut, orient: S.orient });
+
+    // Hardware buttons
+    $$('.hw', slot.dev).forEach(n => n.remove());
+    for (const b of d.buttons) {
+      const n = document.createElement('i');
+      n.className = 'hw' + (b.flush ? ' flush' : '');
+      let side = b.s, off;
+      if (!land) {
+        off = side === 't' ? b.f * ow : b.f * oh;
+      } else {                                     // device turned counter-clockwise
+        if (side === 'l')      { side = 'b'; off = b.f * ow; }
+        else if (side === 'r') { side = 't'; off = b.f * ow; }
+        else if (side === 't') { side = 'l'; off = (1 - b.f) * oh - b.len; }
+      }
+      const st = n.style;
+      if (side === 'l' || side === 'r') {
+        st[side === 'l' ? 'left' : 'right'] = '-3px';
+        st.top = off + 'px'; st.width = '4px'; st.height = b.len + 'px';
+      } else {
+        n.classList.add('h');
+        st[side === 't' ? 'top' : 'bottom'] = '-3px';
+        st.left = off + 'px'; st.height = '4px'; st.width = b.len + 'px';
+      }
+      slot.dev.prepend(n);
+    }
+
+    if (slot.os !== d.os) { slot.icons.innerHTML = ICONS[d.os]; slot.os = d.os; }
+    slot.label.textContent = `${d.name} · ${col[0]}`;
+    slot.ow = ow; slot.oh = oh;
+    slot.form = d.form;
+  }
+
+  // ==========================================================================
+  // Render
+  // ==========================================================================
+  const body = document.body;
+  const deviceSel = $('#deviceSel'), device2Sel = $('#device2Sel');
+
+  function fillDeviceSelect(sel) {
+    const groups = {};
+    DEVICES.forEach(d => (groups[d.group] = groups[d.group] || []).push(d));
+    sel.innerHTML = Object.entries(groups).map(([g, ds]) =>
+      `<optgroup label="${g}">${ds.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}</optgroup>`
+    ).join('');
+  }
+  fillDeviceSelect(deviceSel);
+  fillDeviceSelect(device2Sel);
+
+  function renderSwatches(el, key, idx, which) {
+    el.innerHTML = DEV[key].colors.map((c, i) =>
+      `<button class="swatch${i === idx ? ' on' : ''}" style="--c:${c[1]}" data-i="${i}" data-which="${which}" data-tip="${c[0]}" aria-label="${c[0]}"></button>`
+    ).join('');
+  }
+
+  function render() {
+    if (!DEV[S.device].colors[S.color])   S.color = 0;
+    if (!DEV[S.device2].colors[S.color2]) S.color2 = 0;
+
+    applySlot(slots[0], S.device, S.color);
+    applySlot(slots[1], S.device2, S.color2);
+    slots[1].el.hidden = !S.duo;
+    if (S.duo && !slots[1].iframe.getAttribute('src')) loadSlot(slots[1], S.url);
+
+    body.dataset.bg = S.bg;
+    body.style.setProperty('--custom-bg', S.customBg);
+    body.classList.toggle('duo', S.duo);
+    body.classList.toggle('glare', S.glare);
+    body.classList.toggle('labels', S.labels);
+    body.classList.toggle('caption-on', S.caption);
+    body.classList.toggle('status-light', S.status === 'light');
+    body.style.setProperty('--band', S.band);
+    slots.forEach(s => s.dev.style.setProperty('--band', S.band));
+
+    // Dock state
+    deviceSel.value = S.device;
+    device2Sel.value = S.device2;
+    renderSwatches($('#swatches'), S.device, S.color, 1);
+    renderSwatches($('#swatches2'), S.device2, S.color2, 2);
+    setOn('[data-act="rotate"]', S.orient === 'landscape');
+    setOn('[data-act="duo"]', S.duo);
+    setOn('[data-act="caption"]', S.caption);
+    $$('.seg').forEach(seg => $$('button', seg).forEach(b => b.classList.toggle('on', String(S[seg.dataset.k]) === b.dataset.v)));
+    $$('.tog').forEach(t => t.classList.toggle('on', !!S[t.dataset.k]));
+    $$('.bgchip').forEach(c => c.classList.toggle('on', c.dataset.v === S.bg));
+    $('#customBg').value = S.customBg;
+    $('#bandColor').value = S.band;
+    if (document.activeElement !== $('#urlInput')) $('#urlInput').value = S.url;
+    $('#urlList').innerHTML = S.history.map(u => `<option value="${u.replace(/"/g, '&quot;')}"></option>`).join('');
+
+    updateClock();
+    fit();
+    save();
+  }
+
+  function setOn(sel, on) { const el = $(sel); if (el) el.classList.toggle('on', on); }
+
+  // Animate frame changes with a quick fade so they read as a deliberate switch
+  function swap(fn) {
+    devicesEl.classList.add('swapping');
+    setTimeout(() => { fn(); render(); requestAnimationFrame(() => devicesEl.classList.remove('swapping')); }, 170);
+  }
+
+  // ==========================================================================
+  // Scale to fit the window
+  // ==========================================================================
   function fit() {
-    const presenting  = document.body.classList.contains('presenting');
-    const verticalPad = presenting ? 24 : 90;
-    const horizPad    = 24;
-    const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--phone-w')) || 430;
-    const h = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--phone-h')) || 932;
-    const availH = window.innerHeight - verticalPad;
-    const availW = window.innerWidth  - horizPad;
-    const scale  = Math.min(availH / h, availW / w, 4);
-    document.documentElement.style.setProperty('--scale', scale.toFixed(3));
+    const active = S.duo ? slots : [slots[0]];
+    const reserve = body.classList.contains('clean') ? 28 : 84;
+    $('#layout').style.setProperty('--reserve-bottom', reserve + 'px');
+
+    const layoutGap = parseFloat(getComputedStyle($('#layout')).columnGap) || 0;
+    const capW = S.caption ? $('#caption').getBoundingClientRect().width + layoutGap : 0;
+    const labelH = (S.labels || S.duo) ? 40 : 0;
+    const shadowH = 30;
+    const availW = window.innerWidth - 64 - capW - (S.duo ? 72 : 0);
+    const availH = window.innerHeight - 20 - reserve - labelH - shadowH;
+    const totalW = active.reduce((a, s) => a + s.ow, 0);
+    const maxH = Math.max(...active.map(s => s.oh));
+
+    let scale = S.zoom === 'fit' ? Math.min(availW / totalW, availH / maxH, 1.6) : 1;
+    scale = Math.max(scale, 0.08);
+    for (const s of slots) {
+      s.sizer.style.width  = (s.ow * scale) + 'px';
+      s.sizer.style.height = (s.oh * scale) + 'px';
+      s.dev.style.transform = `scale(${scale})`;
+    }
+    body.classList.toggle('overflow', S.zoom !== 'fit');
   }
   window.addEventListener('resize', fit);
- 
-  // ============================================================
-  // Live clock
-  // ============================================================
+  document.addEventListener('fullscreenchange', fit);
+
+  // ==========================================================================
+  // Clock
+  // ==========================================================================
   function updateClock() {
-    const now = new Date();
-    const h = now.getHours();
-    const m = now.getMinutes().toString().padStart(2, '0');
-    document.getElementById('clock').textContent = `${h}:${m}`;
+    const fixed = S.clock === '941';
+    const now = fixed ? new Date(2007, 0, 9, 9, 41) : new Date();
+    const t = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+    const date = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
+    for (const s of slots) {
+      s.time.textContent = (s.form === 'tablet' && s.os === 'ios') ? `${t}  ${date}` : t;
+      s.time.style.whiteSpace = 'pre';
+    }
   }
-  updateClock();
-  setInterval(updateClock, 30 * 1000);
- 
-  // ============================================================
-  // Toolbar buttons + shortcuts
-  // ============================================================
-  const app         = document.getElementById('app');
-  const reloadBtn   = document.getElementById('reloadBtn');
-  const presentBtn  = document.getElementById('presentBtn');
-  const fsBtn       = document.getElementById('fsBtn');
-  const deviceSel   = document.getElementById('deviceSelect');
- 
-  reloadBtn.addEventListener('click',  () => { app.src = app.src; });
-  presentBtn.addEventListener('click', () => { document.body.classList.toggle('presenting'); fit(); });
-  fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-    else document.exitFullscreen?.();
-  });
-  deviceSel.addEventListener('change', e => applyDevice(e.target.value));
- 
-  document.addEventListener('keydown', (e) => {
-    if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-    const k = e.key.toLowerCase();
-    if (k === 'p') { document.body.classList.toggle('presenting'); fit(); }
-    if (k === 'f') {
+  setInterval(updateClock, 15000);
+
+  // ==========================================================================
+  // Actions
+  // ==========================================================================
+  const actions = {
+    rotate()   { swap(() => { S.orient = S.orient === 'portrait' ? 'landscape' : 'portrait'; }); },
+    duo()      { swap(() => { S.duo = !S.duo; }); },
+    reload()   { slots.forEach((s, i) => { if (i === 0 || S.duo) loadSlot(s, S.url); }); toast('Reloading'); },
+    laser()    { setTool('laser'); },
+    draw()     { setTool('draw'); },
+    caption()  { S.caption = !S.caption; render(); },
+    settings() { togglePop(); },
+    share()    { copyLink(); },
+    fullscreen() {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
       else document.exitFullscreen?.();
+    },
+    help() { $('#help').classList.toggle('open'); },
+  };
+
+  $('#dock').addEventListener('click', e => {
+    const btn = e.target.closest('[data-act]');
+    if (btn) { actions[btn.dataset.act](); return; }
+    const sw = e.target.closest('.swatch');
+    if (sw) {
+      if (sw.dataset.which === '1') S.color = +sw.dataset.i; else S.color2 = +sw.dataset.i;
+      render(); return;
     }
-    if (k === 'r') app.src = app.src;
+    const segBtn = e.target.closest('.seg button');
+    if (segBtn) { S[segBtn.closest('.seg').dataset.k] = segBtn.dataset.v; render(); return; }
+    const tog = e.target.closest('.tog');
+    if (tog) { S[tog.dataset.k] = !S[tog.dataset.k]; render(); poke(); return; }
+    const chip = e.target.closest('.bgchip');
+    if (chip && chip.tagName === 'BUTTON') { S.bg = chip.dataset.v; render(); }
   });
- 
+
+  deviceSel.addEventListener('change', () => { swap(() => { S.device = deviceSel.value; S.color = 0; }); deviceSel.blur(); });
+  device2Sel.addEventListener('change', () => { swap(() => { S.device2 = device2Sel.value; S.color2 = 0; }); });
+  $('#customBg').addEventListener('input', e => { S.customBg = e.target.value; S.bg = 'custom'; render(); });
+  $('#bandColor').addEventListener('input', e => { S.band = e.target.value; render(); });
+
+  $('#urlForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const url = normalizeUrl($('#urlInput').value);
+    S.url = url;
+    S.history = [url, ...S.history.filter(u => u !== url)].slice(0, 10);
+    slots.forEach((s, i) => { if (i === 0 || S.duo) loadSlot(s, url); });
+    $('#urlInput').blur();
+    render();
+  });
+
+  function cycleDevice(dir) {
+    const i = DEVICES.findIndex(d => d.id === S.device);
+    const next = DEVICES[(i + dir + DEVICES.length) % DEVICES.length];
+    swap(() => { S.device = next.id; S.color = 0; });
+    toast(next.name);
+  }
+
+  // ---------- Settings popover ----------
+  const pop = $('#settings');
+  function togglePop(force) {
+    const open = force ?? !pop.classList.contains('open');
+    pop.classList.toggle('open', open);
+    $('#dock').classList.toggle('pop-open', open);
+    setOn('[data-act="settings"]', open);
+    poke();
+  }
+  document.addEventListener('pointerdown', e => {
+    if (pop.classList.contains('open') && !e.target.closest('#settings') && !e.target.closest('[data-act="settings"]')) togglePop(false);
+    if (e.target.id === 'help') $('#help').classList.remove('open');
+  });
+
+  // ---------- Share link ----------
+  function copyLink() {
+    const q = new URLSearchParams({ device: S.device, color: S.color, orient: S.orient, url: S.url, bg: S.bg });
+    if (S.bg === 'custom') q.set('custom', S.customBg.replace('#', ''));
+    if (S.status !== 'dark') q.set('status', S.status);
+    if (S.band.toLowerCase() !== '#ffffff') q.set('band', S.band.replace('#', ''));
+    if (S.duo) { q.set('duo', '1'); q.set('device2', S.device2); q.set('color2', S.color2); }
+    if (S.caption) { q.set('caption', '1'); q.set('eyebrow', S.cap.eyebrow); q.set('title', S.cap.title); q.set('body', S.cap.body); }
+    const link = location.href.split(/[?#]/)[0] + '?' + q.toString();
+    const done = () => toast('Link to this setup copied');
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(link).then(done, () => window.prompt('Copy this link:', link));
+    else window.prompt('Copy this link:', link);
+  }
+
+  // ---------- Caption ----------
+  $$('#caption [data-k]').forEach(el => {
+    el.textContent = S.cap[el.dataset.k];
+    el.addEventListener('input', () => { S.cap[el.dataset.k] = el.innerText.replace(/\n$/, ''); save(); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' && el.dataset.k !== 'body') { e.preventDefault(); el.blur(); } });
+  });
+
+  // ---------- Toast ----------
+  let toastT;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1600);
+  }
+
+  // ---------- Auto-hide toolbar ----------
+  let idleT;
+  function poke() {
+    body.classList.remove('idle');
+    clearTimeout(idleT);
+    if (!S.autohide) return;
+    idleT = setTimeout(() => {
+      const dock = $('#dock');
+      const busy = pop.classList.contains('open') || dock.matches(':hover') || dock.contains(document.activeElement)
+        || $('#help').classList.contains('open');
+      if (busy) poke(); else body.classList.add('idle');
+    }, 2600);
+  }
+  window.addEventListener('mousemove', poke, { passive: true });
+  window.addEventListener('pointerdown', poke, { passive: true });
+
+  // ==========================================================================
+  // Laser pointer & drawing
+  // ==========================================================================
+  const ink = $('#ink');
+  const ctx = ink.getContext('2d');
+  let tool = null, trail = [], strokes = [], cur = null, last = null, raf = 0;
+  const LASER = '255, 45, 70', PEN = '255, 45, 85';
+  const TRAIL_MS = 280, HOLD_MS = 2800, FADE_MS = 700;
+
+  function sizeInk() {
+    const dpr = window.devicePixelRatio || 1;
+    ink.width = Math.round(innerWidth * dpr);
+    ink.height = Math.round(innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    kick();
+  }
+  window.addEventListener('resize', sizeInk);
+  sizeInk();
+
+  function setTool(t) {
+    tool = (tool === t) ? null : t;
+    body.dataset.tool = tool || '';
+    setOn('[data-act="laser"]', tool === 'laser');
+    setOn('[data-act="draw"]', tool === 'draw');
+    trail = []; last = null; cur = null;
+    if (tool) toast(tool === 'laser' ? 'Laser on · Esc to stop' : 'Draw on · C clears · Esc to stop');
+    kick();
+  }
+
+  ink.addEventListener('pointermove', e => {
+    const p = { x: e.clientX, y: e.clientY, t: performance.now() };
+    last = p;
+    if (tool === 'laser') trail.push(p);
+    if (tool === 'draw' && cur) cur.pts.push(p);
+    kick();
+  });
+  ink.addEventListener('pointerdown', e => {
+    if (tool !== 'draw') return;
+    ink.setPointerCapture(e.pointerId);
+    cur = { pts: [{ x: e.clientX, y: e.clientY }], end: 0 };
+    strokes.push(cur);
+    kick();
+  });
+  const endStroke = () => { if (cur) { cur.end = performance.now(); cur = null; kick(); } };
+  ink.addEventListener('pointerup', endStroke);
+  ink.addEventListener('pointercancel', endStroke);
+  ink.addEventListener('pointerleave', () => { last = null; kick(); });
+
+  function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+
+  function strokePath(pts, rgba, width) {
+    ctx.strokeStyle = rgba; ctx.lineWidth = width;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    if (pts.length === 1) ctx.lineTo(pts[0].x + 0.1, pts[0].y);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i].x + pts[i + 1].x) / 2, my = (pts[i].y + pts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    if (pts.length > 1) ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    ctx.stroke();
+  }
+
+  function frame(now) {
+    raf = 0;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+    strokes = strokes.filter(s => !s.end || now - s.end < HOLD_MS + FADE_MS);
+    for (const s of strokes) {
+      const a = s.end ? Math.max(0, Math.min(1, 1 - (now - s.end - HOLD_MS) / FADE_MS)) : 1;
+      ctx.shadowColor = `rgba(${PEN}, ${0.55 * a})`; ctx.shadowBlur = 10;
+      strokePath(s.pts, `rgba(${PEN}, ${a})`, 5);
+    }
+    ctx.shadowBlur = 0;
+
+    if (tool === 'laser') {
+      trail = trail.filter(p => now - p.t < TRAIL_MS);
+      for (let i = 1; i < trail.length; i++) {
+        const a = 1 - (now - trail[i].t) / TRAIL_MS;
+        ctx.strokeStyle = `rgba(${LASER}, ${0.55 * a})`;
+        ctx.lineWidth = 2 + 7 * a; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(trail[i - 1].x, trail[i - 1].y); ctx.lineTo(trail[i].x, trail[i].y); ctx.stroke();
+      }
+      if (last) {
+        const { x, y } = last;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 20);
+        g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        g.addColorStop(0.18, `rgba(${LASER}, 1)`);
+        g.addColorStop(0.45, `rgba(${LASER}, .45)`);
+        g.addColorStop(1, `rgba(${LASER}, 0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    if (strokes.length || (tool === 'laser' && (trail.length || last))) kick();
+  }
+
+  // ==========================================================================
+  // Keyboard shortcuts
+  // ==========================================================================
+  document.addEventListener('keydown', e => {
+    poke();
+    if (e.target.closest && e.target.closest('input, select, textarea, [contenteditable]')) {
+      if (e.key === 'Escape') e.target.blur();
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    const map = {
+      ArrowRight: () => cycleDevice(1), ArrowLeft: () => cycleDevice(-1),
+      o: actions.rotate, '2': actions.duo, r: actions.reload,
+      l: actions.laser, d: actions.draw, c: () => { strokes = []; kick(); },
+      t: actions.caption, f: actions.fullscreen, '?': actions.help,
+      b: () => { S.bg = BGS[(BGS.indexOf(S.bg) + 1) % BGS.length]; render(); },
+      z: () => { S.zoom = S.zoom === 'fit' ? '1' : 'fit'; render(); toast(S.zoom === 'fit' ? 'Fit to window' : 'Actual size'); },
+      p: () => { body.classList.toggle('clean'); fit(); toast(body.classList.contains('clean') ? 'Toolbar hidden · P to show' : 'Toolbar shown'); },
+      Escape: () => {
+        if ($('#help').classList.contains('open')) $('#help').classList.remove('open');
+        else if (pop.classList.contains('open')) togglePop(false);
+        else if (tool) setTool(tool);
+      },
+    };
+    const fn = map[k] || map[k.toLowerCase()];
+    if (fn) { e.preventDefault(); fn(); }
+  });
+
+  // ==========================================================================
   // Init
-  applyDevice('iphone-15-pmax');
+  // ==========================================================================
+  render();
+  loadSlot(slots[0], S.url);
+  if (S.duo) loadSlot(slots[1], S.url);
+  poke();
+  document.fonts?.ready.then(fit);
+})();
 </script>
- 
 </body>
 </html>

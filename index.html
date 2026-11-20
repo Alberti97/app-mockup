@@ -240,6 +240,9 @@ body.status-light .screen { --fg: #fff; }
   transition: opacity .35s ease;
 }
 .slot.loaded .loading { opacity: 0; pointer-events: none; }
+/* Full screen: the app runs edge to edge, under the status bar and home indicator */
+body.fullbleed .app { top: 0; left: 0; width: var(--sw); height: var(--sh); }
+body.fullbleed .loading { inset: 0; }
 .spin {
   width: 28px; height: 28px; border-radius: 50%;
   border: 2.5px solid color-mix(in srgb, var(--fg) 12%, transparent);
@@ -525,6 +528,7 @@ kbd {
     <div class="row"><span>Status bar text</span>
       <div class="seg" data-k="status"><button data-v="dark">Dark</button><button data-v="light">Light</button></div>
     </div>
+    <div class="row"><span>App fills the whole screen</span><button class="tog" data-k="fullbleed" aria-label="App fills the whole screen"></button></div>
     <div class="row"><span>Screen colour behind the app</span>
       <div class="colorbox"><input type="color" id="bandColor" aria-label="Screen colour" /></div>
     </div>
@@ -651,7 +655,7 @@ kbd {
     url: DEFAULT_URL, history: [DEFAULT_URL, PREVIOUS_URL],
     bg: 'midnight', customBg: '#1b1f2a',
     status: 'dark', band: '#ffffff', clock: 'live', zoom: 'fit',
-    glare: false, labels: false, autohide: true, caption: false,
+    fullbleed: true, glare: false, labels: false, autohide: true, caption: false,
     cap: { eyebrow: 'Veesion Store', title: 'Live app demo', body: 'Click any line of this caption to edit it.\nThe text is saved in this browser.' },
   };
 
@@ -675,6 +679,7 @@ kbd {
     if (q.get('custom')) s.customBg = '#' + q.get('custom').replace(/^#/, '');
     if (q.has('status')) s.status = q.get('status') === 'light' ? 'light' : 'dark';
     if (q.get('band'))   s.band   = '#' + q.get('band').replace(/^#/, '');
+    if (q.has('full'))   s.fullbleed = q.get('full') !== '0';
     if (q.has('caption')) s.caption = q.get('caption') === '1';
     for (const k of ['eyebrow', 'title', 'body']) if (q.has(k)) s.cap[k] = q.get(k);
     if (!DEV[s.device])  s.device  = DEFAULTS.device;
@@ -813,6 +818,7 @@ kbd {
     body.style.setProperty('--custom-bg', S.customBg);
     body.classList.toggle('duo', S.duo);
     body.classList.toggle('glare', S.glare);
+    body.classList.toggle('fullbleed', S.fullbleed);
     body.classList.toggle('labels', S.labels);
     body.classList.toggle('caption-on', S.caption);
     body.classList.toggle('status-light', S.status === 'light');
@@ -968,6 +974,7 @@ kbd {
     const q = new URLSearchParams({ device: S.device, color: S.color, orient: S.orient, url: S.url, bg: S.bg });
     if (S.bg === 'custom') q.set('custom', S.customBg.replace('#', ''));
     if (S.status !== 'dark') q.set('status', S.status);
+    if (!S.fullbleed) q.set('full', '0');
     if (S.band.toLowerCase() !== '#ffffff') q.set('band', S.band.replace('#', ''));
     if (S.duo) { q.set('duo', '1'); q.set('device2', S.device2); q.set('color2', S.color2); }
     if (S.caption) { q.set('caption', '1'); q.set('eyebrow', S.cap.eyebrow); q.set('title', S.cap.title); q.set('body', S.cap.body); }
